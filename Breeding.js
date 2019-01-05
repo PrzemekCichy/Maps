@@ -1,19 +1,10 @@
-var current_map = 300;
-var on_map = [];
 var BreedingMod;
 (function (BreedingMod) {
-    var Controller = /** @class */ (function () {
+    var Controller = (function () {
         function Controller() {
             this.nests = ["Empty"];
             this.selectedNest = 0;
             this.initializeDom();
-            this.removeOldListeners();
-            this.findNests();
-            this.createPairs();
-            this.insertPetHTML();
-            this.addListeners();
-            this.setUpInterval();
-            this.initializeListeners();
         }
         ;
         Controller.prototype.findNests = function () {
@@ -41,15 +32,13 @@ var BreedingMod;
             var tempPetPair = [];
             //loop goes through each nests and finds a pair nest
             for (var nest in this.nests) {
-                console.log("Nest in loop", nest, this.nests);
                 var currentlySelected = on_map[300][this.nests[nest].x][this.nests[nest].y];
                 if (currentlySelected.params.other_nest == undefined) {
                     return;
                 }
                 var other_nest_x = currentlySelected.params.other_nest.i + 10;
                 var other_nest_y = currentlySelected.params.other_nest.j + 10;
-                console.log("Nest before parse int", nest);
-                for (var z = parseInt(nest); z < this.nests.length; z++) {
+                for (var z = nest; z < this.nests.length; z++) {
                     tempPetPair = [];
                     //pair nests are pushed together as a Pair array ( tempPetPair[] ) and then into array storing all arrays ( nestPair[] ).
                     if (other_nest_x == this.nests[z].x && other_nest_y == this.nests[z].y) {
@@ -105,13 +94,22 @@ var BreedingMod;
                 this.selectedNest = 0;
             }
         };
-        Controller.prototype.setUpInterval = function () {
+        Controller.prototype.refresh = function () {
+            this.removeListeners();
+            this.findNests();
+            this.createPairs();
+            this.Init();
+            this.addListeners();
+            this.interval();
+            this.initializeListeners();
+        };
+        Controller.prototype.interval = function () {
             var _this = this;
             var wait = false;
             var audio;
             audio = new Audio('https://dl.dropboxusercontent.com/s/t3xqbmi7jw5vy8v/glass_ping-Go445-1207030150.mp3');
             audio.volume = 0.2;
-            this.update = setInterval(function () {
+            var update = setInterval(function () {
                 var nestId = 0;
                 _this.nests.forEach(function (nest) {
                     if (wait == false && Breeding.get_pet_hunger(on_map[300][nest.x][nest.y], on_map[300][nest.x][nest.y]) >= 75 && Breeding.get_pet_hunger(on_map[300][nest.x][nest.y], on_map[300][nest.x][nest.y]) !== 100) {
@@ -137,7 +135,7 @@ var BreedingMod;
                 wait = false;
             }, 1000);
         };
-        Controller.prototype.insertPetHTML = function () {
+        Controller.prototype.Init = function () {
             var _this = this;
             var nestId = 0;
             var petId = 0;
@@ -175,14 +173,7 @@ var BreedingMod;
                     </div>\
                 </div>";
         };
-        Controller.prototype.addListeners = function () {
-            for (var i in this.nests) {
-                console.log("Added", i);
-                document.getElementById("breeding_pet_" + i).addEventListener("click", this.openNest.bind(this), false);
-            }
-            ;
-        };
-        Controller.prototype.removeOldListeners = function () {
+        Controller.prototype.removeListeners = function () {
             if (this.nests != null) {
                 for (var i in this.nests) {
                     console.log("removed", i);
@@ -194,6 +185,13 @@ var BreedingMod;
                 ;
             }
         };
+        Controller.prototype.addListeners = function () {
+            for (var i in this.nests) {
+                console.log("Added", i);
+                document.getElementById("breeding_pet_" + i).addEventListener("click", this.openNest.bind(this), false);
+            }
+            ;
+        };
         Controller.prototype.initializeListeners = function () {
             var _this = this;
             document.addEventListener("keydown", function (b) {
@@ -201,13 +199,12 @@ var BreedingMod;
                 if (b.keyCode === 220)
                     (_this.nextNest());
             });
-            //Add refresh listener
-            //Add close/ Open listeners
         };
         Controller.$inject = ['$scope', '$element'];
         return Controller;
-    }());
+    })();
     BreedingMod.Controller = Controller;
 })(BreedingMod || (BreedingMod = {}));
 var AppTest = new BreedingMod.Controller();
+AppTest.refresh();
 //# sourceMappingURL=Breeding.js.map

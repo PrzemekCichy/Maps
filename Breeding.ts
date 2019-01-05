@@ -1,4 +1,4 @@
-declare var addClass;
+declare var addClass, current_map, on_map;
 declare var $, ng, Breeding, pet_nest;
 
 interface Pet {
@@ -10,8 +10,6 @@ interface PetPair {
     pet2: Pet
 }
 
-var current_map = 300;
-var on_map: any = [];
 
 module BreedingMod {
 
@@ -25,13 +23,6 @@ module BreedingMod {
 
         constructor() {
             this.initializeDom();
-            this.removeOldListeners();
-            this.findNests();
-            this.createPairs();
-            this.insertPetHTML();
-            this.addListeners();
-            this.setUpInterval();
-            this.initializeListeners();
         };
 
         private findNests() {
@@ -134,7 +125,18 @@ module BreedingMod {
         }
         private update;
 
-        private setUpInterval() {
+        private refresh() {
+            this.removeListeners();
+            this.findNests();
+            this.createPairs();
+            this.Init();
+            this.addListeners();
+            this.interval();
+            this.initializeListeners();
+
+        }
+
+        private interval() {
             var wait = false;
             var audio;
             audio = new Audio('https://dl.dropboxusercontent.com/s/t3xqbmi7jw5vy8v/glass_ping-Go445-1207030150.mp3');
@@ -167,7 +169,7 @@ module BreedingMod {
             }, 1000);
         }
 
-        private insertPetHTML() {
+        private Init() {
             var nestId = 0;
             var petId = 0;
             var $holder = document.getElementById("breeding_pets");
@@ -211,14 +213,7 @@ module BreedingMod {
                 </div>";
         }
 
-        private addListeners() {
-            for (var i in this.nests) {
-                console.log("Added", i);
-                document.getElementById("breeding_pet_" + i).addEventListener("click", this.openNest.bind(this), false);
-            };
-        }
-
-        private removeOldListeners() {
+        private removeListeners() {
             if (this.nests != null) {
                 for (var i in this.nests) {
                     console.log("removed", i);
@@ -228,6 +223,13 @@ module BreedingMod {
                     }
                 };
             }
+        }
+
+        private addListeners(){
+            for (var i in this.nests) {
+                console.log("Added", i);
+                document.getElementById("breeding_pet_" + i).addEventListener("click", this.openNest.bind(this), false);
+            };
         }
 
         private initializeListeners() {
