@@ -105,6 +105,7 @@ class RpgMap {
             methods: {
                 onChange: () => {
                     var selectedIndex = map.mapNames.indexOf((<any>document.getElementById("v_dropdown")).value);
+                    console.log("map.render")
                     map.render(selectedIndex);
                 }
             }
@@ -189,11 +190,17 @@ class RpgMap {
                     this.ctxTop.drawImage(IMAGE_BASE[obj.img.sheet].img, <number>(obj.img.x) * 32, <number>(obj.img.y) * 32, 32, 32, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, 32, 32);
                     continue;
                 }
-                if (on_tile.b_t != "1") {
-                }
 
-                this.ctxTop.drawImage(IMAGE_BASE[obj.img.sheet].img, obj.img.x * IMAGE_BASE[obj.img.sheet].tile_width, obj.img.y * IMAGE_BASE[obj.img.sheet].tile_height,
-                    IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
+                // if(typeof BASE_TYPE[on_tile.b_t][on_tile.b_i] != "undefined"){
+                    var tempImg = IMAGE_BASE[obj.img.sheet];
+                    var random_x_offset = typeof obj.img.x == "object" ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)]: obj.img.x;
+                    this.ctxTop.drawImage(tempImg.img, random_x_offset  * tempImg.tile_width, obj.img.y * tempImg.tile_height,
+                        tempImg.tile_width, tempImg.tile_height, offsetX - tempImg.tile_half_width_floor, offsetY - tempImg.tile_half_height_floor, tempImg.tile_width, tempImg.tile_height);
+                    continue;        
+                // }
+                // console.log("DIFFERENT BASE TYPE")
+                //  this.ctxTop.drawImage(IMAGE_BASE[obj.img.sheet].img, obj.img.x * IMAGE_BASE[obj.img.sheet].tile_width, obj.img.y * IMAGE_BASE[obj.img.sheet].tile_height,
+                    //  IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
             }
         }
 
