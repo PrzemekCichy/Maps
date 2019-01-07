@@ -1,0 +1,65 @@
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+    crossorigin="anonymous"></script>
+
+
+
+<div id="Maps">
+    <canvas id="groundTilesCanvas" width="5400" height="3000"></canvas>
+    <canvas id="effects" width="5400" height="3000"></canvas>
+    <canvas id="temporary" width="5400" height="3000"></canvas>
+    <canvas id="topTilesCanvas" width="5400" height="3000"></canvas>
+
+</div>
+
+<select id="v_dropdown" @change="onChange()" v-model="selected">
+    <option v-for="option in options" v-bind:value="option">
+        {{ option }}
+    </option>
+</select>
+
+<style>
+    html,
+    body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+    }
+
+    #v_dropdown {
+        right: 5%;
+        position: absolute;
+    }
+
+    #Maps {
+        position: absolute;
+        top: 0px;
+        max-width: 100%;
+        max-height: calc(100%);
+        overflow: hidden;
+        width: 100%;
+        height: calc(100%);
+    }
+
+    canvas {
+        position: absolute;
+        top: 0px;
+    }
+</style>
+
+<script>
+    //Load maps
+    var map_json = {};
+    var on_map_json = {};
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+<script src="C:/Users/Przemek/Desktop/mods/Map/IMAGE_BASE.js"></script>
+<script src="C:/Users/Przemek/Desktop/mods/Map/ground_base.js"></script>
+<script src="C:/Users/Przemek/Desktop/mods/Map/npc_base.js"></script>
+<script src="C:/Users/Przemek/Desktop/mods/Map/object_base.js"></script>
+<script src="C:/Users/Przemek/Desktop/mods/Map/random.js"></script>
+<script src="C:/Users/Przemek/Desktop/mods/Map/body_parts.js"></script>
+
+
+<script src="C:/Users/Przemek/Desktop/mods/Map/map.js"></script>

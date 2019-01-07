@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "none",
+        "sourceMap": true,
+    },
+    "exclude": [
+        "node_modules",
+        "build.js",
+        "build.js.map"
+    ]
+}
