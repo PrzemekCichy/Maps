@@ -1,4 +1,4 @@
-declare var $, Vue, map_json, on_map_json;
+declare var $, Vue, map_json, on_map_json, d3;
 
 /// <reference types="./ground_base"; />
 
@@ -32,6 +32,7 @@ var BASE_TYPE = {
     FARMING: 7
 };
 
+
 console.log(IMAGE_BASE);
 for (var key in IMAGE_BASE) {
     //THIS SHOULD INITIALIZE GUILDS
@@ -48,10 +49,74 @@ for (var key in IMAGE_BASE) {
     IMAGE_BASE[key].img = new Image();
     IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
 }
-var map;
+var map, d3Helper: D3Helper;
 window.onload = () => {
     map = new RpgMap();
-    setTimeout(() => { map.render(0) }, 500)
+    d3Helper = new D3Helper();
+
+    // d3Helper.drawGridAndGroundMask();
+
+    setTimeout(() => {
+        map.render(0, true)
+    }, 500);
+    d3Helper.drawGridAndGroundMask();
+}
+
+class D3Helper {
+    public svg = d3.select("#demo_svg")
+    constructor() {
+
+    }
+
+    public drawGridAndGroundMask() {
+        this.drawPolygon([{ "x": 0, "y": 1400 },
+        { "x": 2700, "y": 0 },
+        { "x": 5400, "y": 1400 },
+        { "x": 2700, "y": 2800 }], "", "", "white", "0.3");
+
+        var offsetX = 27;
+        var offsetY = 14;
+
+        for (var i = 0; i <= 100; i++) {
+            var tempOffsetX = offsetX * i;
+            var tempOffsetY = offsetY * i;
+            this.drawLine(tempOffsetX, 1400 - tempOffsetY, 2700 + tempOffsetX, 2800 - tempOffsetY, 1, "313335", "none")//x
+            this.drawLine(tempOffsetX, 1400 + tempOffsetY, 2700 + tempOffsetX, 0 + tempOffsetY, 1, "313335", "none")//y
+
+            // drawLine(tempOffsetX, 1400 + tempOffsetY, 2700 + tempOffsetX, -1400 + tempOffsetY, 3, "63666A", "none")//x
+        }
+    }
+    public drawPolygon = (points, strokeColour, strokeWidth, fillColour, fillOpacity) => {
+        console.log("polygon", points, strokeColour, strokeWidth, fillColour, fillOpacity)
+        console.log(this.svg)
+        this.svg.append("polygon")
+            .data([points])
+            .attr("points", function (d) {
+                return d.map(function (d) {
+                    return [d.x, d.y].join(",");
+                }).join(" ");
+            })
+            .attr("stroke", strokeColour)
+            .attr("stroke-width", strokeWidth)
+            .attr("fill", fillColour)
+            .attr("fill-opacity", fillOpacity);
+    }
+
+
+    public drawLine = (startX, startY, endX, endY, strokeWidth, strokeColour, fill) => {
+        this.svg.append("line")
+            .attr('class', "grid_line")
+            .attr("x1", startX)  //<<== change your code here
+            .attr("y1", startY)
+            .attr("x2", endX)  //<<== and here
+            .attr("y2", endY)
+            .style("stroke-width", strokeWidth)
+            .style("stroke", strokeColour)
+            .style("fill", fill);
+    }
+
+
+
 }
 
 class RpgMap {
@@ -60,6 +125,8 @@ class RpgMap {
         this.InitializeMousePanning();
         this.RenderNavigation();
     }
+
+
     //Map container Scrolling
     private InitializeMousePanning() {
         var $maps = $("#Maps");
@@ -136,10 +203,14 @@ class RpgMap {
     public ctxTop: CanvasRenderingContext2D = this.topTilesCanvas.getContext('2d');
 
 
-    public render(map_id) {
+    public render(map_id, preserveSvg?) {
+        if (!preserveSvg) {
+            d3Helper.svg.selectAll("*").remove();
+            d3Helper.drawGridAndGroundMask();
+        }
+
         this.ctxGround.clearRect(0, 0, this.groundTilesCanvas.width, this.groundTilesCanvas.height);
         this.ctxTop.clearRect(0, 0, this.topTilesCanvas.width, this.topTilesCanvas.height);
-
         var offsetX = 0, offsetY = 0, tile;
         var map_id = map_id || 0;
         var maps = map_json[map_id];
@@ -157,7 +228,7 @@ class RpgMap {
             }
         }
 
-        //THIS IS KINDA UNNECESSARY BUT OK W/E
+        //THIS IS KINDA UNNECESSARY AND BAD MEMORY?PERFORMANCE BUT OK W/E
         var sorted_on_tiles: Array<Array<Object>> = [];
         for (var i = 0; i < 100; i++) {
             sorted_on_tiles[i] = [];
@@ -170,6 +241,7 @@ class RpgMap {
         //Top corner is 0, 100, right corner is 100, 100
         //Renders non actions and mobs, but mobs incorrectly
         // b_t = 4 mob, 
+        var npcs = [];
         for (var x = 0; x < 100; x++) {
             for (var y = 99; y >= 0; y--) {
                 on_tile = sorted_on_tiles[x][y];
@@ -182,27 +254,61 @@ class RpgMap {
                 offsetY += 14 * ((on_tile.i));
                 var obj = BASE_TYPE[on_tile.b_t][on_tile.b_i];
                 if (on_tile.b_t == '4') {
+                    if (obj.type == "4") {
+                        npcs.push(obj)
+                        d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                        { "x": offsetX + 0, "y": offsetY + 28 },
+                        { "x": offsetX + 27, "y": offsetY + 14 },
+                        { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#00B8DE", "0.2")
+                    } else if (obj.activities.indexOf("Attack") != "-1") {
+                        d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                        { "x": offsetX + 0, "y": offsetY + 28 },
+                        { "x": offsetX + 27, "y": offsetY + 14 },
+                        { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#AB2328", "0.3")
+                    }
                     if (typeof obj.img.hash != "undefined") {
                         this.ctxTop.drawImage(drawBody(obj.img.hash), 0, 0, 64, 54, offsetX - 27, offsetY - 23, 64, 54)
 
                         continue;
                     }
-                    this.ctxTop.drawImage(IMAGE_BASE[obj.img.sheet].img, <number>(obj.img.x) * 32, <number>(obj.img.y) * 32, 32, 32, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, 32, 32);
+                    this.ctxTop.drawImage(IMAGE_BASE[obj.img.sheet].img, <number>(obj.img.x) * IMAGE_BASE[obj.img.sheet].tile_width, <number>(obj.img.y) * IMAGE_BASE[obj.img.sheet].tile_height, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
                     continue;
                 }
+                if (obj.activities.indexOf("Chop") != "-1") {
+                    d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                    { "x": offsetX + 0, "y": offsetY + 28 },
+                    { "x": offsetX + 27, "y": offsetY + 14 },
+                    { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#00482B", "0.3")
+                } else if (obj.activities.indexOf("Use") != "-1") {
+                    d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                    { "x": offsetX + 0, "y": offsetY + 28 },
+                    { "x": offsetX + 27, "y": offsetY + 14 },
+                    { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#FFCD00", "0.5")
+                }
+                var tempImg = IMAGE_BASE[obj.img.sheet];
 
-                // if(typeof BASE_TYPE[on_tile.b_t][on_tile.b_i] != "undefined"){
-                    var tempImg = IMAGE_BASE[obj.img.sheet];
-                    var random_x_offset = typeof obj.img.x == "object" ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)]: obj.img.x;
-                    this.ctxTop.drawImage(tempImg.img, random_x_offset  * tempImg.tile_width, obj.img.y * tempImg.tile_height,
+                if(typeof obj.img.file == "string"){
+                    console.log(IMAGE_BASE[obj.img.sheet], obj, obj.img.file);
+                    tempImg = IMAGE_BASE[obj.img.sheet].sprite.imgs[obj.img.file]
+
+                    this.ctxTop.drawImage(tempImg.img, random_x_offset * tempImg.tile_width, obj.img.y * tempImg.tile_height,
                         tempImg.tile_width, tempImg.tile_height, offsetX - tempImg.tile_half_width_floor, offsetY - tempImg.tile_half_height_floor, tempImg.tile_width, tempImg.tile_height);
-                    continue;        
+                        continue;
+                }
+                // if(typeof BASE_TYPE[on_tile.b_t][on_tile.b_i] != "undefined"){
+                var random_x_offset = typeof obj.img.x == "object" ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)] : obj.img.x;
+                //console.log(obj, tempImg)
+                this.ctxTop.drawImage(tempImg.img, random_x_offset * tempImg.tile_width, obj.img.y * tempImg.tile_height,
+                    tempImg.tile_width, tempImg.tile_height, offsetX - tempImg.tile_half_width_floor, offsetY - tempImg.tile_half_height_floor, tempImg.tile_width, tempImg.tile_height);
+                continue;
                 // }
                 // console.log("DIFFERENT BASE TYPE")
                 //  this.ctxTop.drawImage(IMAGE_BASE[obj.img.sheet].img, obj.img.x * IMAGE_BASE[obj.img.sheet].tile_width, obj.img.y * IMAGE_BASE[obj.img.sheet].tile_height,
-                    //  IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
+                //  IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
             }
         }
+
+        console.log(npcs)
 
         // console.log("sorted_on_tiles", sorted_on_tiles);
         // for (tile in sorted_on_tiles) {
