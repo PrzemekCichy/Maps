@@ -2,7 +2,7 @@
     crossorigin="anonymous"></script>
 
 <script src="https://d3js.org/d3.v5.js"></script>
-
+<link rel="stylesheet" type="text/css" href="./styles.css">
 
 <div id="Maps">
     <canvas id="groundTilesCanvas" width="5400" height="3000"></canvas>
@@ -15,59 +15,120 @@
 
 </div>
 
+
 <select id="v_dropdown" @change="onChange()" v-model="selected">
     <option v-for="option in options" v-bind:value="option">
         {{ option }}
     </option>
 </select>
 
-<style>
-    html,
-    body {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-    }
 
-    #v_dropdown {
-        right: 5%;
-        position: absolute;
-    }
+<!-- app -->
+<div id="options">
+    <button id="show-modal" @click="showModal = true">Show Controlls</button>
+    <!-- use the modal component, pass in the prop -->
+    <modal v-if="showModal" @close="showModal = false">
+        <!--
+        you can use custom content here to overwrite
+        default content
+      -->
+    </modal>
+</div>
 
-    svg {
-        position: absolute;
-    }
 
-    #Maps {
-        position: absolute;
-        top: 0px;
-        max-width: 100%;
-        max-height: calc(100%);
-        overflow: hidden;
-        width: 100%;
-        height: calc(100%);
-    }
 
-    canvas {
-        position: absolute;
-        top: 0px;
-    }
-</style>
-
-<script>
-    //Load maps
-    var map_json = {};
-    var on_map_json = {};
-
+<!-- template for the axis label component. -->
+<script type="text/x-template" id="axis-label-template">
+  <text :x="point.x" :y="point.y">{{stat.label}}</text>
 </script>
+
+
+
+
+<script type="text/x-template" id="modal-template">
+  <transition name="modal">
+      <div class="modal-wrapper">
+        <div class="modal-container">
+
+          <div class="modal-header">
+            <slot name="header">
+              <h4>Map Rendering Options</h4>
+            </slot>
+          </div>
+
+          <!-- 
+          title: "Ground Overlay",
+          drawEnabled: true,
+          checkboxName: "Draw Lines",
+
+          strokeEnabled: true,
+          strokeColourBoxName: "Select stroke colour",
+          strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } }, 
+
+          fillEnabled: true,
+          fillColourBoxName: "Select stroke colour",
+          fillSlider: { label: 'Fill Opacity', value: 1, range: { min: 0, max: 1, step: 0.05 } },  -->
+
+          <div class="modal-body">
+            <slot name="body">
+              <div id="sliders">
+                <div class="modal_options_entry" v-for="(option, index) in renderOptions">
+                  <div>{{option.title}}</div>
+                  <div v-if="option.drawEnabled">
+                    <input v-on:click="test('drawEnabledValue', index)" type="checkbox" :id="option.title" name="s" :value="option.title" v-model="option.drawEnabledValue">
+                    <label :for="option.title" style="width: 320px;">{{option.checkboxName}}</label>
+                  </div>
+
+                  <div v-if="option.strokeEnabled">
+                     <div>
+                      <label>{{ option.strokeColourBoxName }}</label>
+                      <input v-on:input="test('strokeColourBoxName', index)" v-model="option.strokeColour" type="color">                
+                    </div>    
+                    <div>
+                      <label>{{ option.strokeSlider.label }}</label>
+                      <input v-on:input="test('strokeSlider', index)" type="range" v-model="option.strokeSlider.value" :min="option.strokeSlider.range.min" :max="option.strokeSlider.range.max" :step="option.strokeSlider.range.step">
+                      <span>{{ option.strokeSlider.value }}</span>
+                    </div>
+                  </div>
+
+                  <div v-if="option.fillEnabled">
+                    <div>
+                      <label>{{ option.fillColourBoxName }}</label>
+                      <input v-on:input="test('fillColourBoxName', index)" v-model="option.fillColour" type="color">                
+                    </div>    
+                    <div>
+                      <label>{{ option.fillSlider.label }}</label>
+                      <input v-on:input="test('fillSlider', index)" type="range" v-model="option.fillSlider.value" :min="option.fillSlider.range.min" :max="option.fillSlider.range.max" :step="option.fillSlider.range.step">
+                      <span>{{ option.fillSlider.value }}</span>
+                    </div>  
+                  </div>                   
+                  <!-- <pre id="raw">{{ option }}</pre> -->
+
+                </div>
+              </div>
+            </slot>
+          </div>
+
+          <div class="modal-footer">
+            <slot name="footer">
+              Developed by Przemek Cichy. 
+                  <button class="modal-default-button" @click="$emit('close')">
+                Close
+              </button>
+            </slot>
+          </div>
+        </div>
+    </div>
+  </transition>
+</script>
+
+
+<!-- Load Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-
-<script src="C:/Users/Przemek/Desktop/mods/Map/IMAGE_BASE.js"></script>
-<script src="C:/Users/Przemek/Desktop/mods/Map/ground_base.js"></script>
-<script src="C:/Users/Przemek/Desktop/mods/Map/npc_base.js"></script>
-<script src="C:/Users/Przemek/Desktop/mods/Map/object_base.js"></script>
-<script src="C:/Users/Przemek/Desktop/mods/Map/random.js"></script>
-<script src="C:/Users/Przemek/Desktop/mods/Map/body_parts.js"></script>
-
-
-<script src="C:/Users/Przemek/Desktop/mods/Map/map.js"></script>
+<script src="./IMAGE_BASE.js"></script>
+<script src="./ground_base.js"></script>
+<script src="./npc_base.js"></script>
+<script src="./object_base.js"></script>
+<script src="./random.js"></script>
+<script src="./body_parts.js"></script>
+<script src="./map.js"></script>

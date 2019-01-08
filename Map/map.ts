@@ -1,58 +1,37 @@
-declare var $, Vue, map_json, on_map_json, d3;
+declare var $, Vue, d3;
 
-/// <reference types="./ground_base"; />
+/// <reference types="./ground_base.ts"; />
 
-/// <reference types="./IMAGE_BASE"; />
-/// <reference types="./_object_base"; />
-/// <reference types="./_npc_base"; />
+/// <reference types="./IMAGE_BASE.ts"; />
+/// <reference types="./object_base.ts"; />
+/// <reference types="./npc_base.ts"; />
 var item_base, players, pets;
-declare var object_base, ground_base, npc_base, IMAGE_BASE, BODY_PARTS, NO_HEAD_HELMETS, GENDER, GENDER_HEADS;
+declare var object_base, ground_base, npc_base, IMAGE_BASE, BODY_PARTS, NO_HEAD_HELMETS, GENDER, GENDER_HEADS, BASE_TYPE;
 
-var BASE_TYPE = {
-    OBJECT: "1",
-    1: object_base,
-    GROUND: "2",
-    2: ground_base,
-    ITEM: "3",
-    3: item_base,
-    NPC: "4",
-    4: npc_base,
-    PLAYER: "5",
-    5: players,
-    PET: "6",
-    6: pets
-}, OBJECT_TYPE = {
-    DUMMY: 0,
-    TREE: 1,
-    STONE: 2,
-    ENEMY: 3,
-    SHOP: 4,
-    FISH: 5,
-    COOKING: 6,
-    FARMING: 7
-};
+var map_json = {};
+var on_map_json = {};
 
-
-for (var key in IMAGE_BASE) {
-    //THIS SHOULD INITIALIZE GUILDS
-    if (typeof IMAGE_BASE[key].sprite != "undefined") {
-        IMAGE_BASE[key].sprite.img = {}
-        for (var building in IMAGE_BASE[key].sprite.imgs) {
-            IMAGE_BASE[key].sprite.img[building] = {};
-            IMAGE_BASE[key].sprite.img[building].img = new Image()
-            IMAGE_BASE[key].sprite.img[building].img.src = IMAGE_BASE[key].sprite.spriteSheetLocation;
-            
-        }
-        console.log(IMAGE_BASE[key])
-    }
-    if (typeof key == 'undefined' || typeof (IMAGE_BASE[key]) == "string" || typeof IMAGE_BASE[key].url == 'undefined') {
-        continue;
-    }
-    IMAGE_BASE[key].img = new Image();
-    IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
-}
 var map, d3Helper: D3Helper;
 window.onload = () => {
+    for (var key in IMAGE_BASE) {
+        //THIS SHOULD INITIALIZE GUILDS
+        if (typeof IMAGE_BASE[key].sprite != "undefined") {
+            IMAGE_BASE[key].sprite.img = {}
+            for (var building in IMAGE_BASE[key].sprite.imgs) {
+                IMAGE_BASE[key].sprite.img[building] = {};
+                IMAGE_BASE[key].sprite.img[building].img = new Image()
+                IMAGE_BASE[key].sprite.img[building].img.src = IMAGE_BASE[key].sprite.spriteSheetLocation;
+
+            }
+            console.log(IMAGE_BASE[key])
+        }
+        if (typeof key == 'undefined' || typeof (IMAGE_BASE[key]) == "string" || typeof IMAGE_BASE[key].url == 'undefined') {
+            continue;
+        }
+        IMAGE_BASE[key].img = new Image();
+        IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
+    }
+
     map = new RpgMap();
     d3Helper = new D3Helper();
 
@@ -70,11 +49,22 @@ class D3Helper {
 
     }
 
+    //Order Matters
+    public svgGroups = {
+        groundOverlay: this.svg.append("g").attr("class", "groundOverlay"),
+        gridLines: this.svg.append("g").attr("class", "gridLines"),
+        monsterTilesHighlight: this.svg.append("g").attr("class", "monsterTilesHighlight"),
+        clickableTilesHighlight: this.svg.append("g").attr("class", "clickableTilesHighlight"),
+        npcTilesHighlight: this.svg.append("g").attr("class", "npcTilesHighlight"),
+        treeTilesHighlight: this.svg.append("g").attr("class", "treeTilesHighlight"),
+
+    }
+
     public drawGridAndGroundMask() {
-        this.drawPolygon([{ "x": 0, "y": 1400 },
+        this.drawPolygon(this.svgGroups.groundOverlay, [{ "x": 0, "y": 1400 },
         { "x": 2700, "y": 0 },
         { "x": 5400, "y": 1400 },
-        { "x": 2700, "y": 2800 }], "", "", "white", "0.3");
+        { "x": 2700, "y": 2800 }], "313335", "2", "#ffffff", "0.3");
 
         var offsetX = 27;
         var offsetY = 14;
@@ -82,14 +72,14 @@ class D3Helper {
         for (var i = 0; i <= 100; i++) {
             var tempOffsetX = offsetX * i;
             var tempOffsetY = offsetY * i;
-            this.drawLine(tempOffsetX, 1400 - tempOffsetY, 2700 + tempOffsetX, 2800 - tempOffsetY, 1, "313335", "none")//x
-            this.drawLine(tempOffsetX, 1400 + tempOffsetY, 2700 + tempOffsetX, 0 + tempOffsetY, 1, "313335", "none")//y
+            this.drawLine(this.svgGroups.gridLines, tempOffsetX, 1400 - tempOffsetY, 2700 + tempOffsetX, 2800 - tempOffsetY, 1, "#313335", "none")//x
+            this.drawLine(this.svgGroups.gridLines, tempOffsetX, 1400 + tempOffsetY, 2700 + tempOffsetX, 0 + tempOffsetY, 1, "#313335", "none")//y
 
             // drawLine(tempOffsetX, 1400 + tempOffsetY, 2700 + tempOffsetX, -1400 + tempOffsetY, 3, "63666A", "none")//x
         }
     }
-    public drawPolygon = (points, strokeColour, strokeWidth, fillColour, fillOpacity) => {
-        this.svg.append("polygon")
+    public drawPolygon = (svg, points, strokeColour, strokeWidth, fillColour, fillOpacity) => {
+        svg.append("polygon")
             .data([points])
             .attr("points", function (d) {
                 return d.map(function (d) {
@@ -103,20 +93,16 @@ class D3Helper {
     }
 
 
-    public drawLine = (startX, startY, endX, endY, strokeWidth, strokeColour, fill) => {
-        this.svg.append("line")
-            .attr('class', "grid_line")
+    public drawLine = (svg, startX, startY, endX, endY, strokeWidth, strokeColour, fill) => {
+        svg.append("line")
             .attr("x1", startX)  //<<== change your code here
             .attr("y1", startY)
             .attr("x2", endX)  //<<== and here
             .attr("y2", endY)
-            .style("stroke-width", strokeWidth)
-            .style("stroke", strokeColour)
-            .style("fill", fill);
+            .attr("stroke-width", strokeWidth)
+            .attr("stroke", strokeColour)
+            .attr("fill", fill);
     }
-
-
-
 }
 
 class RpgMap {
@@ -177,11 +163,179 @@ class RpgMap {
                 }
             }
         });
+
+        // The raw data to observe
+        var renderOptions = [
+            {
+                title: "Grid Lines",
+                groupId: "gridLines",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Draw Grid Lines",
+                strokeEnabled: true,
+                strokeColour: "#313335",
+                strokeColourBoxName: "Select stroke colour",
+                strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+                fillEnabled: false,
+                fillColour: "#2D5593",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 1, step: 0.1 } },
+            }, {
+                title: "Ground Overlay",
+                groupId: "groundOverlay",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Draw Lines",
+                strokeEnabled: true,
+                strokeColour: "#313335",
+                strokeColourBoxName: "Select stroke colour",
+                strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+                fillEnabled: true,
+                fillColour: "#ffffff",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+            }, {
+                title: "NPC Tiles Highlight",
+                groupId: "npcTilesHighlight",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Draw Highlight tile under NPCs",
+                strokeEnabled: true,
+                strokeColourBoxName: "Select stroke colour",
+                strokeColour: "#313335",
+                strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+                fillEnabled: true,
+                fillColour: "#00B8DE",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+            }, {
+                title: "Clickable Tiles Highlight",
+                groupId: "clickableTilesHighlight",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Draw highlight tile under clickable tiles",
+                strokeEnabled: true,
+                strokeColourBoxName: "Select stroke colour",
+                strokeColour: "#313335",
+                strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+                fillEnabled: true,
+                fillColour: "#FFCD00",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+            }, {
+                title: "Monster Tiles Highlight",
+                groupId: "monsterTilesHighlight",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Draw highlight tile under monsters",
+                strokeEnabled: true,
+                strokeColour: "#313335",
+                strokeColourBoxName: "Select stroke colour",
+                strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+                fillEnabled: true,
+                fillColour: "#AB2328",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+            }, {
+                title: "Tree Tiles Highlight",
+                groupId: "treeTilesHighlight",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Draw highlight tile under chopable trees",
+                strokeEnabled: true,
+                strokeColour: "#313335",
+                strokeColourBoxName: "Select stroke colour",
+                strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+                fillEnabled: true,
+                fillColour: "#00482B",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+            }
+        ]
+
+
+        // // bootstrap the demo
+        // new Vue({
+        //     template: "sliders-template",
+
+        // })
+
+        // register modal component
+        var b = Vue.component('modal', {
+            template: '#modal-template',
+            data: function () {
+                return {
+                    showModal: false,
+                    newLabel: '',
+                    renderOptions: renderOptions
+                }
+            },
+            methods: {
+                test: function (property, index) {
+                    // //If property comes with a ., it means its nestedm so unwrap it
+                    // var propertyArr = property.split(".");
+                    // var obj = renderOptions[index];
+                    // propertyArr.forEach((_prop) => {
+                    //     obj = obj[_prop]
+                    // })
+                    // console.log("type, value", property, index, renderOptions[index], obj);
+
+                    if (property == "drawEnabledValue") {
+                        var prop: boolean = renderOptions[index]["drawEnabledValue"]
+                        var list1 = d3.selectAll("g").filter("." + renderOptions[index].groupId)
+                            .style('display', prop != true ? "block" : "none");
+                        console.log(list1)
+
+                    } else if (property == "strokeSlider") {
+                        var list1 = d3.selectAll("g").filter("." + renderOptions[index].groupId)
+                            .selectAll("polygon,line").attr("stroke-width", renderOptions[index].strokeSlider.value.toString())
+                    } else if (property == "fillSlider") {
+                        var list1 = d3.selectAll("g").filter("." + renderOptions[index].groupId)
+                            .selectAll("polygon,line").attr("fill-opacity", renderOptions[index].fillSlider.value)
+                    } else if (property == "strokeColourBoxName") {
+                        console.log("strokeColour", property, index, renderOptions[index]);
+                        var list1 = d3.selectAll("g").filter("." + renderOptions[index].groupId)
+                            .selectAll("polygon,line").attr("stroke", renderOptions[index].strokeColour)
+                    } else if (property == "fillColourBoxName") {
+                        console.log("fillColour", property, index, renderOptions[index], renderOptions[index].fillColour);
+
+                        var list1 = d3.selectAll("g").filter("." + renderOptions[index].groupId)
+                            .selectAll("polygon,line").attr("fill", renderOptions[index].fillColour)
+                    } else {
+
+                    }
+
+                    //d3Helper.svg;
+                }
+            }
+        })
+        // b.renderOptions = renderOptions;
+
+        // start app
+        var a = new Vue({
+            el: '#options',
+            data: {
+                showModal: false,
+                newLabel: '',
+                renderOptions: renderOptions
+            }
+        });
+
+        // var a = new Vue({
+        //     el: '#demo_svg',
+        //     data: {
+        //         showModal: false,
+        //         newLabel: '',
+        //         renderOptions: renderOptions
+        //     }
+        // });
+
+
+
     }
 
     public LoadMaps() {
         this.mapNames.forEach((value, index) => {
-
             var mapFile: any = document.createElement('script');
 
             mapFile.setAttribute("type", "text/javascript");
@@ -224,11 +378,19 @@ class RpgMap {
                 offsetX -= 27 * (99 - (maps[tile].j));
                 offsetY = 0 + 14 * (99 - maps[tile].j);
                 offsetY += 14 * ((maps[tile].i));
-                this.ctxGround.drawImage(IMAGE_BASE[ground_base[maps[tile].b_i].img.sheet].img, ground_base[maps[tile].b_i].img.x * 54, ground_base[maps[tile].b_i].img.y * 34, 54, 34, offsetX, offsetY, 54, 34);
+                var tempImg = ground_base[maps[tile].b_i].img;
+                this.ctxGround.drawImage(IMAGE_BASE[tempImg.sheet].img, tempImg.x * 54, tempImg.y * 34, 54, 34, offsetX, offsetY, 54, 34);
+                if (typeof ground_base[maps[tile].b_i].top == "object") {
+                    console.log("Tops", ground_base[maps[tile].b_i].top)
+                    tempImg = ground_base[maps[tile].b_i].top;
+                    console.log(tempImg.y, IMAGE_BASE[tempImg.sheet].tile_width)
+                    this.ctxGround.drawImage(IMAGE_BASE[tempImg.sheet].img, tempImg.x * IMAGE_BASE[tempImg.sheet].tile_width, tempImg.y * 49, 54, 49, offsetX, offsetY - 22, 54, 49);
+
+                }
             }
         }
 
-        //THIS IS KINDA UNNECESSARY AND BAD MEMORY?PERFORMANCE BUT OK W/E
+        //THIS IS KINDA UNNECESSARY AND BAD MEMORY/PERFORMANCE BUT OK W/E
         var sorted_on_tiles: Array<Array<Object>> = [];
         for (var i = 0; i < 100; i++) {
             sorted_on_tiles[i] = [];
@@ -256,12 +418,12 @@ class RpgMap {
                 if (on_tile.b_t == '4') {
                     if (obj.type == "4") {
                         npcs.push(obj)
-                        d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                        d3Helper.drawPolygon(d3Helper.svgGroups.npcTilesHighlight, [{ "x": offsetX - 27, "y": offsetY + 14 },
                         { "x": offsetX + 0, "y": offsetY + 28 },
                         { "x": offsetX + 27, "y": offsetY + 14 },
-                        { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#00B8DE", "0.2")
+                        { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#2D5593", "0.2")
                     } else if (obj.activities.indexOf("Attack") != "-1") {
-                        d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                        d3Helper.drawPolygon(d3Helper.svgGroups.monsterTilesHighlight, [{ "x": offsetX - 27, "y": offsetY + 14 },
                         { "x": offsetX + 0, "y": offsetY + 28 },
                         { "x": offsetX + 27, "y": offsetY + 14 },
                         { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#AB2328", "0.3")
@@ -275,12 +437,12 @@ class RpgMap {
                     continue;
                 }
                 if (obj.activities.indexOf("Chop") != "-1") {
-                    d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                    d3Helper.drawPolygon(d3Helper.svgGroups.treeTilesHighlight, [{ "x": offsetX - 27, "y": offsetY + 14 },
                     { "x": offsetX + 0, "y": offsetY + 28 },
                     { "x": offsetX + 27, "y": offsetY + 14 },
                     { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#00482B", "0.3")
                 } else if (obj.activities.indexOf("Use") != "-1") {
-                    d3Helper.drawPolygon([{ "x": offsetX - 27, "y": offsetY + 14 },
+                    d3Helper.drawPolygon(d3Helper.svgGroups.clickableTilesHighlight, [{ "x": offsetX - 27, "y": offsetY + 14 },
                     { "x": offsetX + 0, "y": offsetY + 28 },
                     { "x": offsetX + 27, "y": offsetY + 14 },
                     { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#FFCD00", "0.5")
@@ -309,75 +471,8 @@ class RpgMap {
 
         console.log(npcs)
 
-        // console.log("sorted_on_tiles", sorted_on_tiles);
-        // for (tile in sorted_on_tiles) {
-        //     on_tile = mapsTop.length - tile - 1;
-        //     console.log(on_tile)
-
-        //     //                ctxTop.drawImage(imgGroundTop, 7*54, 7*34, 54, 34, offsetX, offsetY, 54, 34);
-        //     offsetX = ;
-        //     offsetX += 27 * ((mapsTop[on_tile].j));
-        //     offsetY = 1400 - 38 - 14 * (mapsTop[on_tile].j);
-        //     offsetY += 14 * ((mapsTop[on_tile].i));
-        //     // if (mapsTop[on_tile].b_i < ground_base.length) {
-        //     //image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
-        //     console.log("object_base[mapsTop[on_tile].b_i]", object_base[mapsTop[on_tile].b_i])
-        //     //} else {
-        //     //ctxTop.drawImage(imgGroundTop, 54, 50, 54, 50, offsetX, offsetY, 54, 50);
-        //     // }
-
-        // }
-
     }
 }
-
-
-
-
-
-
-
-
-
-/*
-function drawBody(a) {
-    //Split hash using space as separator
-    var hash = a.split(" ");
-    //Turn strings into numbers
-    for (var i = 0; 13 > i; i++) {
-        hash[i] <<= 0;
-    }
- 
-    //BODY_PARTS.HEADS[d];
-    var d = hash[0],
-        //BODY_PARTS.FACIAL_HAIR[e];
-        e = hash[1],
-        //BODY_PARTS.BODIES[f];
-        f = hash[2],
-        //BODY_PARTS.PANTS[g];
-        g = hash[3],
-        //BODY_PARTS.CAPES[h];
-        h = hash[4],
-        //BODY_PARTS.LEFT_HANDS[l];
-        l = hash[5],
-        //BODY_PARTS.RIGHT_HANDS[m];
-        m = hash[6],
-        //BODY_PARTS.SHIELDS[a];
-        a = hash[7],
-        //BODY_PARTS.WEAPONS[k];
-        k = hash[8],
-        //BODY_PARTS.HELMETS[q];
-        q = hash[9],
-        //BODY_PARTS.BOOTS[r];
-        r = hash[10],
-        u = hash[11],
-        //BODY_PARTS.GROUND_EFFECT[n];
-        n = hash[12];
-            
-}
-*/
-
-
 
 ////////GAME FUNCTIONS SLIGHTLY MODIFIED CARE!!!!!///////////
 
@@ -433,7 +528,7 @@ function drawBody(a) {
             d = u.pos._y || 0,
             C = IMAGE_BASE[u.sheet].tile_width * u.x,
             E = IMAGE_BASE[u.sheet].tile_height * u.y;
-            console.log(u, u.sheet, IMAGE_BASE[u.sheet])
+    console.log(u, u.sheet, IMAGE_BASE[u.sheet])
     // B.drawImage(IMAGE_BASE[u.sheet].img, C, E, p.tile_width, p.tile_height, b, d, p.tile_width, p.tile_height);
     b = BODY_PARTS.CAPES[n + e] || BODY_PARTS.CAPES[n];
     u = b.img;
