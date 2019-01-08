@@ -33,15 +33,17 @@ var BASE_TYPE = {
 };
 
 
-console.log(IMAGE_BASE);
 for (var key in IMAGE_BASE) {
     //THIS SHOULD INITIALIZE GUILDS
     if (typeof IMAGE_BASE[key].sprite != "undefined") {
+        IMAGE_BASE[key].sprite.img = {}
         for (var building in IMAGE_BASE[key].sprite.imgs) {
-            IMAGE_BASE[key].sprite.imgs[building].img = new Image()
-            IMAGE_BASE[key].sprite.imgs[building].img.src = IMAGE_BASE[key].sprite.spriteSheetLocation;
-
+            IMAGE_BASE[key].sprite.img[building] = {};
+            IMAGE_BASE[key].sprite.img[building].img = new Image()
+            IMAGE_BASE[key].sprite.img[building].img.src = IMAGE_BASE[key].sprite.spriteSheetLocation;
+            
         }
+        console.log(IMAGE_BASE[key])
     }
     if (typeof key == 'undefined' || typeof (IMAGE_BASE[key]) == "string" || typeof IMAGE_BASE[key].url == 'undefined') {
         continue;
@@ -87,8 +89,6 @@ class D3Helper {
         }
     }
     public drawPolygon = (points, strokeColour, strokeWidth, fillColour, fillOpacity) => {
-        console.log("polygon", points, strokeColour, strokeWidth, fillColour, fillOpacity)
-        console.log(this.svg)
         this.svg.append("polygon")
             .data([points])
             .attr("points", function (d) {
@@ -287,13 +287,12 @@ class RpgMap {
                 }
                 var tempImg = IMAGE_BASE[obj.img.sheet];
 
-                if(typeof obj.img.file == "string"){
-                    console.log(IMAGE_BASE[obj.img.sheet], obj, obj.img.file);
-                    tempImg = IMAGE_BASE[obj.img.sheet].sprite.imgs[obj.img.file]
+                if (typeof obj.img.file == "string") {
+                    tempImg = IMAGE_BASE[obj.img.sheet].sprite.img[obj.img.file]
 
                     this.ctxTop.drawImage(tempImg.img, random_x_offset * tempImg.tile_width, obj.img.y * tempImg.tile_height,
                         tempImg.tile_width, tempImg.tile_height, offsetX - tempImg.tile_half_width_floor, offsetY - tempImg.tile_half_height_floor, tempImg.tile_width, tempImg.tile_height);
-                        continue;
+                    continue;
                 }
                 // if(typeof BASE_TYPE[on_tile.b_t][on_tile.b_i] != "undefined"){
                 var random_x_offset = typeof obj.img.x == "object" ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)] : obj.img.x;
@@ -424,10 +423,9 @@ function drawBody(a) {
     b = BODY_PARTS.GROUND_EFFECT[y];
     var u = b.img, D = !0, p, C, E;
     if ("undefined" != typeof u.sheet_file) {
-        p = IMAGE_BASE[u.sheet_file].sprite.imgs[u.file];
+        p = IMAGE_BASE[u.sheet_file].sprite.img[u.file];
         if ("undefined" == typeof p)
             return A;
-        console.log(p, IMAGE_BASE[u.sheet_file].sprite, u.file)
         B.drawImage(p.img, u.pos && u.pos._x || 0, u.pos && u.pos._y || 0)
     } else
         p = IMAGE_BASE[u.sheet],
@@ -435,11 +433,12 @@ function drawBody(a) {
             d = u.pos._y || 0,
             C = IMAGE_BASE[u.sheet].tile_width * u.x,
             E = IMAGE_BASE[u.sheet].tile_height * u.y;
-    //B.drawImage(IMAGE_BASE[u.sheet].img, C, E, p.tile_width, p.tile_height, b, d, p.tile_width, p.tile_height);
+            console.log(u, u.sheet, IMAGE_BASE[u.sheet])
+    // B.drawImage(IMAGE_BASE[u.sheet].img, C, E, p.tile_width, p.tile_height, b, d, p.tile_width, p.tile_height);
     b = BODY_PARTS.CAPES[n + e] || BODY_PARTS.CAPES[n];
     u = b.img;
     if ("undefined" != typeof u.sheet_file) {
-        p = IMAGE_BASE[u.sheet_file].sprite.imgs[u.file];
+        p = IMAGE_BASE[u.sheet_file].sprite.img[u.file];
         if ("undefined" == typeof p)
             return A;
         //B.drawImage(p.img, u.pos && u.pos._x || 0, u.pos && u.pos._y || 0)
