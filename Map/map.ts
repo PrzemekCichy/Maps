@@ -12,18 +12,6 @@ var map, d3Helper: D3Helper;
 // }
 var version, cache;
 
-$.getJSON('https://rpg.mo.ee/version.js', function(data) {    
-    version = data.v;
-    cache =  data.c;
-});
-
-setTimeout(()=>{
-    window.onload = () => {
-        console.log("Window on load finished")
-        map.render(0, true)
-    };    
-}, 200)
-
 class D3Helper {
     public svg = d3.select("#highlights_svg")
     public textSvg = d3.select("#text_svg")
@@ -104,7 +92,6 @@ class D3Helper {
 
 class RpgMap {
     constructor() {
-        this.LoadMaps();
         this.InitializeMousePanning();
         this.RenderNavigation();
     }
@@ -346,21 +333,6 @@ class RpgMap {
 
 
     }
-    
-
-    public LoadMaps() {
-        this.mapNames.forEach((value, index) => {
-            var mapFile: any = document.createElement('script');
-            mapFile.setAttribute("async", "");
-            mapFile.setAttribute("defer", "");
-            mapFile.setAttribute("type", "text/javascript");
-            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?"+ version);
-
-            document.getElementsByTagName("head")[0].appendChild(mapFile);
-
-        });
-    }
-
 
 
     //Use <HTMLCanvasElement> or var groundTilesCanvas : any = document.getElementById("groundTilesCanvas");
@@ -710,8 +682,36 @@ for (var key in IMAGE_BASE) {
     IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
 }
 
-map = new RpgMap();
-d3Helper = new D3Helper();
+$.getJSON('https://rpg.mo.ee/version.js', function (data) {
+    version = data.v;
+    cache = data.c;
+    setTimeout(() => {
+        map = new RpgMap();
+        d3Helper = new D3Helper();
+        d3Helper.drawGridAndGroundMask();
+        map.mapNames.forEach((value, index) => {
+            var mapFile: any = document.createElement('script');
+            mapFile.setAttribute("async", "");
+            mapFile.setAttribute("defer", "");
+            mapFile.setAttribute("type", "text/javascript");
+            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + version);
 
-d3Helper.drawGridAndGroundMask();
+            document.getElementsByTagName("head")[0].appendChild(mapFile);
+
+        });
+        console.log("Window on load finished")
+
+        window.onload = () => {
+            map.render(0, true)
+        };
+    });
+
+    () => {
+
+
+
+    }
+});
+
+
 console.log("Window on load finished")

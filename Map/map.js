@@ -5,16 +5,6 @@ var map, d3Helper;
 // window.onload = () => {
 // }
 var version, cache;
-$.getJSON('https://rpg.mo.ee/version.js', function (data) {
-    version = data.v;
-    cache = data.c;
-});
-setTimeout(function () {
-    window.onload = function () {
-        console.log("Window on load finished");
-        map.render(0, true);
-    };
-}, 200);
 var D3Helper = /** @class */ (function () {
     function D3Helper() {
         this.svg = d3.select("#highlights_svg");
@@ -98,7 +88,6 @@ var RpgMap = /** @class */ (function () {
         this.ctxGround = this.groundTilesCanvas.getContext('2d');
         this.topTilesCanvas = document.getElementById("topTilesCanvas");
         this.ctxTop = this.topTilesCanvas.getContext('2d');
-        this.LoadMaps();
         this.InitializeMousePanning();
         this.RenderNavigation();
     }
@@ -303,16 +292,6 @@ var RpgMap = /** @class */ (function () {
         //         renderOptions: renderOptions
         //     }
         // });
-    };
-    RpgMap.prototype.LoadMaps = function () {
-        this.mapNames.forEach(function (value, index) {
-            var mapFile = document.createElement('script');
-            mapFile.setAttribute("async", "");
-            mapFile.setAttribute("defer", "");
-            mapFile.setAttribute("type", "text/javascript");
-            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + version);
-            document.getElementsByTagName("head")[0].appendChild(mapFile);
-        });
     };
     RpgMap.prototype.render = function (map_id, preserveSvg) {
         if (!preserveSvg) {
@@ -614,8 +593,28 @@ for (var key in IMAGE_BASE) {
     IMAGE_BASE[key].img = new Image();
     IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
 }
-map = new RpgMap();
-d3Helper = new D3Helper();
-d3Helper.drawGridAndGroundMask();
+$.getJSON('https://rpg.mo.ee/version.js', function (data) {
+    version = data.v;
+    cache = data.c;
+    setTimeout(function () {
+        map = new RpgMap();
+        d3Helper = new D3Helper();
+        d3Helper.drawGridAndGroundMask();
+        map.mapNames.forEach(function (value, index) {
+            var mapFile = document.createElement('script');
+            mapFile.setAttribute("async", "");
+            mapFile.setAttribute("defer", "");
+            mapFile.setAttribute("type", "text/javascript");
+            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + version);
+            document.getElementsByTagName("head")[0].appendChild(mapFile);
+        });
+        console.log("Window on load finished");
+        window.onload = function () {
+            map.render(0, true);
+        };
+    });
+    (function () {
+    });
+});
 console.log("Window on load finished");
 //# sourceMappingURL=map.js.map
