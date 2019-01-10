@@ -538,7 +538,7 @@ class RpgMap {
 
                     console.log(coords, _offsetX, _offsetY, a.pageX, a.pageY)
                     //$maps.scrollBy(_offsetX, _offsetY);
-                    $maps.scrollTop(_offsetY - $(window).height()/2);
+                    $maps.scrollTop(_offsetY - $(window).height() / 2);
                     $maps.scrollLeft(_offsetX - a.pageX + $(window).width() / 2);
                     //document.getElementById("Maps").scrollTo(_offsetX, _offsetY);
 
