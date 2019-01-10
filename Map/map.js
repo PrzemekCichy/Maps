@@ -599,11 +599,17 @@ $.getJSON('https://rpg.mo.ee/version.js', function (data) {
     map = new RpgMap();
     d3Helper = new D3Helper();
     d3Helper.drawGridAndGroundMask();
-    setTimeout(function () {
-        window.onload = function () {
-            map.render(0, true);
-        };
-    }, 10);
+    function myLoop() {
+        setTimeout(function () {
+            if (typeof on_map_json[0] != "undefined") {
+                map.render(0, true);
+                console.log("Render");
+                return; //  ..  setTimeout()
+            }
+            myLoop();
+        }, 30);
+    }
+    myLoop();
     map.mapNames.forEach(function (value, index) {
         var mapFile = document.createElement('script');
         mapFile.setAttribute("async", "");

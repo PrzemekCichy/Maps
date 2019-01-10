@@ -688,12 +688,19 @@ $.getJSON('https://rpg.mo.ee/version.js', function (data) {
     map = new RpgMap();
     d3Helper = new D3Helper();
     d3Helper.drawGridAndGroundMask();
-    setTimeout(() => {
 
-        window.onload = () => {
-            map.render(0, true);
-        };
-    }, 10);
+    function myLoop () {           //  create a loop function
+        setTimeout(function () {    //  call a 3s setTimeout when the loop is called
+            if(typeof on_map_json[0] != "undefined"){
+                map.render(0, true);
+                console.log("Render");
+                return;                    //  ..  setTimeout()
+            } 
+            myLoop ();
+        }, 30)
+     }
+     
+     myLoop();         
 
     map.mapNames.forEach((value, index) => {
         var mapFile: any = document.createElement('script');
