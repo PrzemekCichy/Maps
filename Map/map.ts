@@ -7,36 +7,15 @@ var map_json = {};
 var on_map_json = {};
 
 var map, d3Helper: D3Helper;
-window.onload = () => {
-    for (var key in IMAGE_BASE) {
-        //THIS SHOULD INITIALIZE GUILDS
-        if (typeof IMAGE_BASE[key].sprite != "undefined") {
-            IMAGE_BASE[key].sprite.img = {}
-            for (var building in IMAGE_BASE[key].sprite.imgs) {
-                IMAGE_BASE[key].sprite.img[building] = {};
-                IMAGE_BASE[key].sprite.img[building].img = new Image()
-                IMAGE_BASE[key].sprite.img[building].img.src = IMAGE_BASE[key].sprite.spriteSheetLocation;
+// window.onload = () => {
 
-            }
-            console.log(IMAGE_BASE[key])
-        }
-        if (typeof key == 'undefined' || typeof (IMAGE_BASE[key]) == "string" || typeof IMAGE_BASE[key].url == 'undefined') {
-            continue;
-        }
-        IMAGE_BASE[key].img = new Image();
-        IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
-    }
-
-    map = new RpgMap();
-    d3Helper = new D3Helper();
-
-    // d3Helper.drawGridAndGroundMask();
-
-    setTimeout(() => {
+// }
+setTimeout(()=>{
+    window.onload = () => {
+        console.log("Window on load finished")
         map.render(0, true)
-    }, 500);
-    d3Helper.drawGridAndGroundMask();
-}
+    };    
+}, 200)
 
 class D3Helper {
     public svg = d3.select("#highlights_svg")
@@ -364,7 +343,8 @@ class RpgMap {
     public LoadMaps() {
         this.mapNames.forEach((value, index) => {
             var mapFile: any = document.createElement('script');
-
+            mapFile.setAttribute("async", "");
+            mapFile.setAttribute("defer", "");
             mapFile.setAttribute("type", "text/javascript");
             mapFile.setAttribute("src", "https://1239889624.rsc.cdn77.org/maps/map" + index + ".js");
 
@@ -410,9 +390,7 @@ class RpgMap {
                 var tempImg = ground_base[maps[tile].b_i].img;
                 this.ctxGround.drawImage(IMAGE_BASE[tempImg.sheet].img, tempImg.x * 54, tempImg.y * 34, 54, 34, offsetX, offsetY, 54, 34);
                 if (typeof ground_base[maps[tile].b_i].top == "object") {
-                    console.log("Tops", ground_base[maps[tile].b_i].top)
                     tempImg = ground_base[maps[tile].b_i].top;
-                    console.log(tempImg.y, IMAGE_BASE[tempImg.sheet].tile_width)
                     this.ctxGround.drawImage(IMAGE_BASE[tempImg.sheet].img, tempImg.x * IMAGE_BASE[tempImg.sheet].tile_width, tempImg.y * 49, 54, 49, offsetX, offsetY - 22, 54, 49);
 
                 }
@@ -501,7 +479,6 @@ class RpgMap {
             var canvasHolder = <HTMLCanvasElement>document.getElementById("groupSidebar");
 
             computed_mob_locations[map_id].forEach((center, index) => {
-                console.log(center)
                 offsetX = 28 + 27 * (center.x);
                 offsetX += 27 * (center.y);
                 offsetY = 1350 + 36 - 14 * (center.y);
@@ -616,7 +593,6 @@ function drawBody(a) {
             d = u.pos._y || 0,
             C = IMAGE_BASE[u.sheet].tile_width * u.x,
             E = IMAGE_BASE[u.sheet].tile_height * u.y;
-    console.log(u, u.sheet, IMAGE_BASE[u.sheet])
     // B.drawImage(IMAGE_BASE[u.sheet].img, C, E, p.tile_width, p.tile_height, b, d, p.tile_width, p.tile_height);
     b = BODY_PARTS.CAPES[n + e] || BODY_PARTS.CAPES[n];
     u = b.img;
@@ -705,3 +681,29 @@ function drawBody(a) {
             B.drawImage(IMAGE_BASE[u.sheet].img, C, E, p.tile_width, p.tile_height, 11 + b, 11 + d, p.tile_width, p.tile_height);
     return A
 }
+
+
+for (var key in IMAGE_BASE) {
+    //THIS SHOULD INITIALIZE GUILDS
+    if (typeof IMAGE_BASE[key].sprite != "undefined") {
+        IMAGE_BASE[key].sprite.img = {}
+        for (var building in IMAGE_BASE[key].sprite.imgs) {
+            IMAGE_BASE[key].sprite.img[building] = {};
+            IMAGE_BASE[key].sprite.img[building].img = new Image()
+            IMAGE_BASE[key].sprite.img[building].img.src = IMAGE_BASE[key].sprite.spriteSheetLocation;
+
+        }
+        console.log(IMAGE_BASE[key])
+    }
+    if (typeof key == 'undefined' || typeof (IMAGE_BASE[key]) == "string" || typeof IMAGE_BASE[key].url == 'undefined') {
+        continue;
+    }
+    IMAGE_BASE[key].img = new Image();
+    IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
+}
+
+map = new RpgMap();
+d3Helper = new D3Helper();
+
+d3Helper.drawGridAndGroundMask();
+console.log("Window on load finished")
