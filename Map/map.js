@@ -310,7 +310,7 @@ var RpgMap = /** @class */ (function () {
             mapFile.setAttribute("async", "");
             mapFile.setAttribute("defer", "");
             mapFile.setAttribute("type", "text/javascript");
-            mapFile.setAttribute("src", "http://data.mo.ee/maps/map" + index + ".js?" + version);
+            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + version);
             document.getElementsByTagName("head")[0].appendChild(mapFile);
         });
     };
