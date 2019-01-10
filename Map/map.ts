@@ -685,32 +685,28 @@ for (var key in IMAGE_BASE) {
 $.getJSON('https://rpg.mo.ee/version.js', function (data) {
     version = data.v;
     cache = data.c;
+    map = new RpgMap();
+    d3Helper = new D3Helper();
+    d3Helper.drawGridAndGroundMask();
     setTimeout(() => {
-        map = new RpgMap();
-        d3Helper = new D3Helper();
-        d3Helper.drawGridAndGroundMask();
-        map.mapNames.forEach((value, index) => {
-            var mapFile: any = document.createElement('script');
-            mapFile.setAttribute("async", "");
-            mapFile.setAttribute("defer", "");
-            mapFile.setAttribute("type", "text/javascript");
-            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + version);
-
-            document.getElementsByTagName("head")[0].appendChild(mapFile);
-
-        });
-        console.log("Window on load finished")
 
         window.onload = () => {
-            map.render(0, true)
+            map.render(0, true);
         };
+    }, 10);
+
+    map.mapNames.forEach((value, index) => {
+        var mapFile: any = document.createElement('script');
+        mapFile.setAttribute("async", "");
+        mapFile.setAttribute("defer", "");
+        mapFile.setAttribute("type", "text/javascript");
+        mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + cache);
+
+        document.getElementsByTagName("head")[0].appendChild(mapFile);
+
     });
-
-    () => {
-
-
-
-    }
+    console.log("Window on load finished")
+ 
 });
 
 

@@ -596,25 +596,23 @@ for (var key in IMAGE_BASE) {
 $.getJSON('https://rpg.mo.ee/version.js', function (data) {
     version = data.v;
     cache = data.c;
+    map = new RpgMap();
+    d3Helper = new D3Helper();
+    d3Helper.drawGridAndGroundMask();
     setTimeout(function () {
-        map = new RpgMap();
-        d3Helper = new D3Helper();
-        d3Helper.drawGridAndGroundMask();
-        map.mapNames.forEach(function (value, index) {
-            var mapFile = document.createElement('script');
-            mapFile.setAttribute("async", "");
-            mapFile.setAttribute("defer", "");
-            mapFile.setAttribute("type", "text/javascript");
-            mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + version);
-            document.getElementsByTagName("head")[0].appendChild(mapFile);
-        });
-        console.log("Window on load finished");
         window.onload = function () {
             map.render(0, true);
         };
+    }, 10);
+    map.mapNames.forEach(function (value, index) {
+        var mapFile = document.createElement('script');
+        mapFile.setAttribute("async", "");
+        mapFile.setAttribute("defer", "");
+        mapFile.setAttribute("type", "text/javascript");
+        mapFile.setAttribute("src", "https://data.mo.ee/maps/map" + index + ".js?" + cache);
+        document.getElementsByTagName("head")[0].appendChild(mapFile);
     });
-    (function () {
-    });
+    console.log("Window on load finished");
 });
 console.log("Window on load finished");
 //# sourceMappingURL=map.js.map
