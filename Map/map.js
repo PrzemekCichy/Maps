@@ -5,7 +5,7 @@ var map, d3Helper;
 // window.onload = () => {
 // }
 var version, cache;
-$.getJSON('http://rpg.mo.ee/version.js', function (data) {
+$.getJSON('https://rpg.mo.ee/version.js', function (data) {
     version = data.v;
     cache = data.c;
 });
