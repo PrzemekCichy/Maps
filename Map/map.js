@@ -4,6 +4,11 @@ var on_map_json = {};
 var map, d3Helper;
 // window.onload = () => {
 // }
+var version, cache;
+$.getJSON('http://rpg.mo.ee/version.js', function (data) {
+    version = data.v;
+    cache = data.c;
+});
 setTimeout(function () {
     window.onload = function () {
         console.log("Window on load finished");
@@ -305,7 +310,7 @@ var RpgMap = /** @class */ (function () {
             mapFile.setAttribute("async", "");
             mapFile.setAttribute("defer", "");
             mapFile.setAttribute("type", "text/javascript");
-            mapFile.setAttribute("src", "https://1239889624.rsc.cdn77.org/maps/map" + index + ".js");
+            mapFile.setAttribute("src", "http://data.mo.ee/maps/map" + index + ".js?" + version);
             document.getElementsByTagName("head")[0].appendChild(mapFile);
         });
     };
