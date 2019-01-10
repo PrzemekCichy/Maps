@@ -1,12 +1,7 @@
 declare var $, Vue, d3;
 
-/// <reference types="./ground_base.ts"; />
-
-/// <reference types="./IMAGE_BASE.ts"; />
-/// <reference types="./object_base.ts"; />
-/// <reference types="./npc_base.ts"; />
 var item_base, players, pets;
-declare var object_base, ground_base, npc_base, IMAGE_BASE, BODY_PARTS, NO_HEAD_HELMETS, GENDER, GENDER_HEADS, BASE_TYPE;
+declare var object_base, ground_base, npc_base, computed_mob_locations, IMAGE_BASE, BODY_PARTS, NO_HEAD_HELMETS, GENDER, GENDER_HEADS, BASE_TYPE;
 
 var map_json = {};
 var on_map_json = {};
@@ -44,7 +39,8 @@ window.onload = () => {
 }
 
 class D3Helper {
-    public svg = d3.select("#demo_svg")
+    public svg = d3.select("#highlights_svg")
+    public textSvg = d3.select("#text_svg")
     constructor() {
 
     }
@@ -57,7 +53,7 @@ class D3Helper {
         clickableTilesHighlight: this.svg.append("g").attr("class", "clickableTilesHighlight"),
         npcTilesHighlight: this.svg.append("g").attr("class", "npcTilesHighlight"),
         treeTilesHighlight: this.svg.append("g").attr("class", "treeTilesHighlight"),
-
+        mobsGroups: this.textSvg.append("g").attr("class", "mobsGroups")
     }
 
     public drawGridAndGroundMask() {
@@ -92,6 +88,21 @@ class D3Helper {
             .attr("fill-opacity", fillOpacity);
     }
 
+    public drawText = (svg, text, x, y) => {
+        svg.append("text")
+            .attr("x", x)
+            .attr("y", y)
+            .text(text)
+            .attr("class", "monster-text")
+            .attr("font-weight", "700")
+            .attr("font-size", "26px")
+            .attr("font-family", "Arial,Helvetica")
+            .attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .attr("stroke", "white")
+            .attr("stroke-width", "1");
+    }
+
 
     public drawLine = (svg, startX, startY, endX, endY, strokeWidth, strokeColour, fill) => {
         svg.append("line")
@@ -112,34 +123,35 @@ class RpgMap {
         this.RenderNavigation();
     }
 
+    private clickOldY = 0
+    clickOldX = 0;
 
     //Map container Scrolling
     private InitializeMousePanning() {
         var $maps = $("#Maps");
         var clicked = false, clickY, clickX;
-        var clickOldY = 0, clickOldX = 0;
 
         $maps.on({
-            'mousemove': function (e) {
+            'mousemove': (e) => {
                 clicked && updateScrollPos(e);
             },
-            'mousedown': function (e) {
+            'mousedown': (e) => {
                 clicked = true;
-                clickY = e.pageY + clickOldY;
-                clickX = e.pageX + clickOldX;
+                clickY = e.pageY + this.clickOldY;
+                clickX = e.pageX + this.clickOldX;
             },
-            'mouseup': function () {
+            'mouseup': () => {
                 clicked = false;
                 $maps.css('cursor', 'auto');
             }
         });
 
-        var updateScrollPos = function (e) {
+        var updateScrollPos = (e) => {
             $maps.css('cursor', 'row-resize');
             $maps.scrollTop((clickY - e.pageY));
             $maps.scrollLeft((clickX - e.pageX));
-            clickOldY = $maps.scrollTop();
-            clickOldX = $maps.scrollLeft();
+            this.clickOldY = $maps.scrollTop();
+            this.clickOldX = $maps.scrollLeft();
         };
     }
 
@@ -250,7 +262,22 @@ class RpgMap {
                 fillColour: "#00482B",
                 fillColourBoxName: "Select fill colour",
                 fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
-            }
+            },
+            // {
+            //     title: "Monster Group Highlight",
+            //     groupId: "mobsGroups",
+            //     drawEnabled: true,
+            //     drawEnabledValue: true,
+            //     drawEnabledDescription: "Draw highlight tile under chopable trees",
+            //     strokeEnabled: true,
+            //     strokeColour: "#313335",
+            //     strokeColourBoxName: "Select stroke colour",
+            //     strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+            //     fillEnabled: true,
+            //     fillColour: "#5F4B8B",
+            //     fillColourBoxName: "Select fill colour",
+            //     fillSlider: { label: 'Fill Opacity', value: 1, range: { min: 0, max: 1, step: 0.1 } },
+            // }
         ]
 
 
@@ -359,8 +386,10 @@ class RpgMap {
 
     public render(map_id, preserveSvg?) {
         if (!preserveSvg) {
-            d3Helper.svg.selectAll("*").remove();
+            d3Helper.svg.selectAll("g").selectAll("*").remove();
+            d3Helper.textSvg.selectAll("g").selectAll("*").remove();
             d3Helper.drawGridAndGroundMask();
+            $("#groupSidebar")[0].innerHTML = "";
         }
 
         this.ctxGround.clearRect(0, 0, this.groundTilesCanvas.width, this.groundTilesCanvas.height);
@@ -468,14 +497,73 @@ class RpgMap {
                 //  IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, offsetX - IMAGE_BASE[obj.img.sheet].tile_half_width_floor, offsetY - IMAGE_BASE[obj.img.sheet].tile_half_height_floor, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
             }
         }
+        (() => {
+            var canvasHolder = <HTMLCanvasElement>document.getElementById("groupSidebar");
 
+            computed_mob_locations[map_id].forEach((center, index) => {
+                console.log(center)
+                offsetX = 28 + 27 * (center.x);
+                offsetX += 27 * (center.y);
+                offsetY = 1350 + 36 - 14 * (center.y);
+                offsetY += 14 * (center.x);
+
+                d3Helper.drawPolygon(d3Helper.svgGroups.npcTilesHighlight, [{ "x": offsetX - 27, "y": offsetY + 14 },
+                { "x": offsetX + 0, "y": offsetY + 28 },
+                { "x": offsetX + 27, "y": offsetY + 14 },
+                { "x": offsetX + 0, "y": offsetY + 0 }], "#313335", "1", "#5F4B8B", "1")
+
+                d3Helper.drawText(d3Helper.svgGroups.mobsGroups, npc_base[center.b_i].name, offsetX, offsetY - 30)
+
+                var canvas = document.createElement('canvas');
+                canvas.id = center.x + "," + center.y;
+                canvas.width = 64;
+                canvas.height = 54;
+                canvas.style.border = "1px solid";
+                canvas.style.position = "relative";
+                var $maps = $("#Maps");
+
+                var jumpToGroup = (a) => {
+                    var coords = a.srcElement.id.split(",");
+
+                    var x = parseFloat(coords[0]);
+                    var y = parseFloat(coords[1]);
+
+                    var _offsetX = 27;
+                    var _offsetY = 14;
+
+                    _offsetX = 28 + 27 * (x);
+                    _offsetX += 27 * (y);
+                    _offsetY = 1400 - 14 * (y);
+                    _offsetY += 14 * (x);
+
+                    console.log(coords, _offsetX, _offsetY, a.pageX, a.pageY)
+                    //$maps.scrollBy(_offsetX, _offsetY);
+                    $maps.scrollTop(_offsetY - $(window).height()/2);
+                    $maps.scrollLeft(_offsetX - a.pageX + $(window).width() / 2);
+                    //document.getElementById("Maps").scrollTo(_offsetX, _offsetY);
+
+
+                    // this.clickOldY = $maps.scrollTop();
+                    // this.clickOldX = $maps.scrollLeft();
+                }
+                canvas.addEventListener('click', jumpToGroup)
+
+                canvasHolder.appendChild(canvas);
+
+                var ctx = canvas.getContext("2d");
+                var obj = npc_base[center.b_i];
+                if (typeof npc_base[center.b_i].img.hash != "undefined") {
+                    ctx.drawImage(drawBody(obj.img.hash), 0, 0, 64, 54, 0, 0, 64, 54)
+                } else {
+                    ctx.drawImage(IMAGE_BASE[obj.img.sheet].img, obj.img.x * IMAGE_BASE[obj.img.sheet].tile_width, obj.img.y * IMAGE_BASE[obj.img.sheet].tile_height, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height, IMAGE_BASE[obj.img.sheet].tile_width / 4, IMAGE_BASE[obj.img.sheet].tile_height / 4, IMAGE_BASE[obj.img.sheet].tile_width, IMAGE_BASE[obj.img.sheet].tile_height);
+                }
+            })
+        })()
         console.log(npcs)
-
     }
 }
 
 ////////GAME FUNCTIONS SLIGHTLY MODIFIED CARE!!!!!///////////
-
 function deepObjCopy(a) {
     var b = {};
     if ("object" == typeof a && null != a) {

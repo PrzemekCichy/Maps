@@ -19,6 +19,30 @@
         right: 0;
     }
 
+    .monster-text:hover { 
+        fill: #FFD100 ;
+        stroke: #C7622B;
+        stroke-width: 1px;
+        font-weight:  "900";
+        font-size: "28px";
+    }
+
+    #groupSidebar {
+        height: calc(100% - 24px);
+        width: 74px;
+        background-color: #313335;
+        position: absolute;
+        right:0;
+        top: 0;
+        padding-top: 24px;
+        overflow-y: auto;
+    overflow-x: hidden;
+    }
+    #groupSidebarCanvas {
+        position: absolute;
+        top: 0px;
+    }
+
     #Maps {
         position: absolute;
         top: 0px;
