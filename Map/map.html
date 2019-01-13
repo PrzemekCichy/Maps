@@ -1,4 +1,4 @@
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> 
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
@@ -7,15 +7,18 @@
 <link rel="stylesheet" type="text/css" href="styles.css">
 
 <div id="Maps">
-  <canvas id="groundTilesCanvas" width="5400" height="3000"></canvas>
-  <svg id="highlights_svg" width="5400" height="3000">
-  </svg>
-  <canvas id="effects" width="5400" height="3000"></canvas>
-  <canvas id="temporary" width="5400" height="3000"></canvas>
-  <canvas id="topTilesCanvas" width="5400" height="3000"></canvas>
-  <svg id="text_svg" width="5400" height="3000">
-  </svg>
+  <div id="mapsContainer">
+    <canvas id="groundTilesCanvas" width="5400" height="3000"></canvas>
+    <svg id="highlights_svg" width="5400" height="3000">
+    </svg>
+    <canvas id="effects" width="5400" height="3000"></canvas>
+    <canvas id="temporary" width="5400" height="3000"></canvas>
+    <canvas id="topTilesCanvas" width="5400" height="3000"></canvas>
+    <svg id="text_svg" width="5400" height="3000">
+    </svg>
+  </div>
 </div>
+
 
 
 <select id="v_dropdown" @change="onChange()" v-model="selected">
@@ -27,7 +30,7 @@
 
 <!-- app -->
 <div id="options">
-  <div id="groupSidebar"><canvas  width="54" height="100%" id="groupSidebarCanvas"></canvas></div>
+  <div id="groupSidebar"><canvas width="54" height="100%" id="groupSidebarCanvas"></canvas></div>
 
   <button id="show-modal" @click="showModal = true">Show Controlls</button>
   <!-- use the modal component, pass in the prop -->
