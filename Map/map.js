@@ -346,6 +346,10 @@ var RpgMap = /** @class */ (function () {
                 offsetY = 1350 + 36 - 14 * (on_tile.j);
                 offsetY += 14 * ((on_tile.i));
                 var obj = BASE_TYPE[on_tile.b_t][on_tile.b_i];
+                if (typeof (obj) == "undefined") {
+                    console.log(on_tile.b_t, on_tile.b_i, "Undefined");
+                    continue;
+                }
                 if (on_tile.b_t == '4') {
                     if (obj.type == "4") {
                         npcs.push(obj);
@@ -429,6 +433,19 @@ var RpgMap = /** @class */ (function () {
                     //$maps.scrollBy(_offsetX, _offsetY);
                     $maps.scrollTop(_offsetY - $(window).height() / 2);
                     $maps.scrollLeft(_offsetX - a.pageX + $(window).width() / 2);
+                    ////TODO
+                    /*
+                    _offsetX = 27 + 27 * (x);
+                    _offsetX += 27 * (y);
+                    _offsetY = 1400 - 14.5 * (y);
+                    _offsetY += 14.5 * (x);
+
+                    console.log(coords, _offsetX, _offsetY, a.pageX, a.pageY)
+                    */
+                    //$maps.scrollBy(_offsetX, _offsetY);
+                    /* $maps.scrollTop((_offsetY - $(window).height() / 2) * scale - $(window).height() / 2);
+                     $maps.scrollLeft((_offsetX + $(window).width() / 2) * scale - (a.pageX + $(window).width()/2 ) * scale);
+                     */
                     //document.getElementById("Maps").scrollTo(_offsetX, _offsetY);
                     // this.clickOldY = $maps.scrollTop();
                     // this.clickOldX = $maps.scrollLeft();
@@ -620,6 +637,7 @@ $.getJSON('https://rpg.mo.ee/version.js', function (data) {
     });
     console.log("Window on load finished");
 });
+// var scale = 1
 function ScrollZoom(container, max_scale, factor) {
     var target = container.children().first();
     var size = { w: target.width(), h: target.height() };
@@ -633,6 +651,7 @@ function ScrollZoom(container, max_scale, factor) {
         var offset = container.offset();
         zoom_point.x = e.pageX - offset.left;
         zoom_point.y = e.pageY - offset.top;
+        console.log(zoom_point.x, zoom_point.y);
         e.preventDefault();
         var delta = e.delta || e.originalEvent.wheelDelta;
         if (delta === undefined) {
@@ -649,6 +668,8 @@ function ScrollZoom(container, max_scale, factor) {
         // calculate x and y based on zoom
         pos.x = -zoom_target.x * scale + zoom_point.x;
         pos.y = -zoom_target.y * scale + zoom_point.y;
+        // $maps.scrollTop();
+        // $maps.scrollLeft();
         // Make sure the slide stays in its container area when zooming out
         if (pos.x > 0)
             pos.x = 0;
@@ -658,9 +679,12 @@ function ScrollZoom(container, max_scale, factor) {
             pos.y = 0;
         if (pos.y + size.h * scale < size.h)
             pos.y = -size.h * (scale - 1);
+        // if(scale < 1)
+        // pos.x = 0;
         update();
     }
     function update() {
+        // var $maps = $("#Maps");
         target.css('transform', 'translate(' + (pos.x) + 'px,' + (pos.y) + 'px) scale(' + scale + ',' + scale + ')');
     }
 }
