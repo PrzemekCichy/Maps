@@ -51,6 +51,7 @@
         overflow: hidden;
         width: 100%;
         height: calc(100%);
+        image-rendering: pixelated;
     }
 
     canvas {

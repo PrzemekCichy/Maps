@@ -4,9 +4,16 @@
         "module": "none",
         "sourceMap": true,
     },
+    "include": [
+        "map.ts",
+    ],
     "exclude": [
         "node_modules",
         "build.js",
-        "build.js.map"
+        "build.js.map",
+        "npc_base.js",
+        "object_base.js",
+        "ground_base.js",
+        "IMAGE_BASE.js"
     ]
 }
