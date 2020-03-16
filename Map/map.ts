@@ -128,10 +128,7 @@ class RpgMap {
         };
     }
 
-    public mapNames = ["Dorpat", "Dungeon I", "Narwa", "Whiland", "Reval", "Rakblood", "Blood River", "Hell", "Clouds", "Heaven", "Cesis", "Walco", "Tutorial Island",
-        "Pernau", "Fellin", "Dragon's Lair", "No Man's Land", "Ancient Dungeon", "Lost Woods", "Minigames", "Broceliande Forest", "Devil's Triangle",
-        "Cathedral", "Illusion Guild", "Every Man's Land", "Moche I", "Wittensten", "Dungeon II", "Dungeon III", "Dungeon IV", "Moche II", "Void I",
-        "Nature Tower", "Ice Tower", "Fire Tower", "Witches I", "Witches II", "Star Of Knowledge", "Core Of Knowledge", "No Man's Dungeon", "Tavern"];
+    public mapNames = ["Dorpat","Dungeon I","Narwa","Whiland","Reval","Rakblood","Blood River","Hell","Clouds","Heaven","Cesis","Walco","Tutorial Island","Pernau","Fellin","Dragon's Lair","No Man's Land","Ancient Dungeon","Lost Woods","Minigames","Broceliande Forest","Devil's Triangle","Cathedral","Illusion Guild","Every Man's Land","Moche I","Wittensten","Dungeon II","Dungeon III","Dungeon IV","Moche II","Void I","Nature Tower","Ice Tower","Fire Tower","Witches I","Witches II","Star Of Knowledge","Core Of Knowledge","No Man's Dungeon","Tavern","Lost Relic"];
 
     public RenderNavigation() {
         new Vue({
