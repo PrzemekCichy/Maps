@@ -65,7 +65,7 @@ class D3Helper {
     }
 
     public drawText = (svg, text, x, y) => {
-        svg.append("text")
+        return svg.append("text")
             .attr("x", x)
             .attr("y", y)
             .text(text)
@@ -347,6 +347,16 @@ class RpgMap {
             d3Helper.drawGridAndGroundMask();
             $("#groupSidebar")[0].innerHTML = "";
         }
+        
+        
+        
+        d3Helper.drawText(d3Helper.textSvg, "Use right click to drag the map...", 30, 30)
+            .attr("text-anchor", "left")
+            .attr("fill", "black")
+            .attr("stroke", "")
+            .attr("stroke-width", 0);
+
+
 
         this.ctxGround.clearRect(0, 0, this.groundTilesCanvas.width, this.groundTilesCanvas.height);
         this.ctxTop.clearRect(0, 0, this.topTilesCanvas.width, this.topTilesCanvas.height);

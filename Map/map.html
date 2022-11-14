@@ -32,7 +32,7 @@
 <div id="options">
   <div id="groupSidebar"><canvas width="54" height="100%" id="groupSidebarCanvas"></canvas></div>
 
-  <button id="show-modal" @click="showModal = true">Show Controlls</button>
+  <button id="show-modal" @click="showModal = !showModal">Show Controlls</button>
   <!-- use the modal component, pass in the prop -->
   <modal v-if="showModal" @close="showModal = false">
     <!--

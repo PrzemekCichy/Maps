@@ -19,6 +19,7 @@
         right: 0;
     }
 
+    
     .monster-text:hover { 
         fill: #FFD100 ;
         stroke: #C7622B;
@@ -28,6 +29,7 @@
     }
 
     #groupSidebar {
+        cursor: pointer;
         height: calc(100% - 24px);
         width: 74px;
         background-color: #313335;
@@ -38,6 +40,7 @@
         overflow-y: auto;
     overflow-x: hidden;
     }
+
     #groupSidebarCanvas {
         position: absolute;
         top: 0px;
@@ -57,6 +60,10 @@
     canvas {
         position: absolute;
         top: 0px;
+    }
+
+    svg {
+        cursor: crosshair;
     }
 
     .modal-wrapper {
