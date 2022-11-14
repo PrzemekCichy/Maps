@@ -10,6 +10,8 @@ var map, d3Helper: D3Helper;
 // window.onload = () => {
 
 // }
+
+console.log("test")
 var version, cache;
 
 class D3Helper {
@@ -128,7 +130,7 @@ class RpgMap {
         };
     }
 
-    public mapNames = ["Dorpat","Dungeon I","Narwa","Whiland","Reval","Rakblood","Blood River","Hell","Clouds","Heaven","Cesis","Walco","Tutorial Island","Pernau","Fellin","Dragon's Lair","No Man's Land","Ancient Dungeon","Lost Woods","Minigames","Broceliande Forest","Devil's Triangle","Cathedral","Illusion Guild","Every Man's Land","Moche I","Wittensten","Dungeon II","Dungeon III","Dungeon IV","Moche II","Void I","Nature Tower","Ice Tower","Fire Tower","Witches I","Witches II","Star Of Knowledge","Core Of Knowledge","No Man's Dungeon","Tavern","Lost Relic"];
+    public mapNames = ["Dorpat", "Dungeon I", "Narwa", "Whiland", "Reval", "Rakblood", "Blood River", "Hell", "Clouds", "Heaven", "Cesis", "Walco", "Tutorial Island", "Pernau", "Fellin", "Dragon's Lair", "No Man's Land", "Ancient Dungeon", "Lost Woods", "Minigames", "Broceliande Forest", "Devil's Triangle", "Cathedral", "Illusion Guild", "Every Man's Land", "Moche I", "Wittensten", "Dungeon II", "Dungeon III", "Dungeon IV", "Moche II", "Void I", "Nature Tower", "Ice Tower", "Fire Tower", "Witches I", "Witches II", "Star Of Knowledge", "Core Of Knowledge", "No Man's Dungeon", "Tavern", "Lost Relic"];
 
     public RenderNavigation() {
         new Vue({
@@ -327,10 +329,7 @@ class RpgMap {
         //     }
         // });
 
-
-
     }
-
 
     //Use <HTMLCanvasElement> or var groundTilesCanvas : any = document.getElementById("groundTilesCanvas");
     //Render Map tiles
@@ -399,7 +398,7 @@ class RpgMap {
                 offsetY = 1350 + 36 - 14 * (on_tile.j);
                 offsetY += 14 * ((on_tile.i));
                 var obj = BASE_TYPE[on_tile.b_t][on_tile.b_i];
-                if(typeof(obj)=="undefined"){
+                if (typeof (obj) == "undefined") {
                     console.log(on_tile.b_t, on_tile.b_i, "Undefined")
                     continue;
                 }
@@ -509,10 +508,10 @@ class RpgMap {
 
                     console.log(coords, _offsetX, _offsetY, a.pageX, a.pageY)
                     */
-                   //$maps.scrollBy(_offsetX, _offsetY);
-                   /* $maps.scrollTop((_offsetY - $(window).height() / 2) * scale - $(window).height() / 2);
-                    $maps.scrollLeft((_offsetX + $(window).width() / 2) * scale - (a.pageX + $(window).width()/2 ) * scale);
-                    */
+                    //$maps.scrollBy(_offsetX, _offsetY);
+                    /* $maps.scrollTop((_offsetY - $(window).height() / 2) * scale - $(window).height() / 2);
+                     $maps.scrollLeft((_offsetX + $(window).width() / 2) * scale - (a.pageX + $(window).width()/2 ) * scale);
+                     */
                     //document.getElementById("Maps").scrollTo(_offsetX, _offsetY);
 
 
@@ -695,6 +694,12 @@ for (var key in IMAGE_BASE) {
         continue;
     }
     IMAGE_BASE[key].img = new Image();
+    if (!IMAGE_BASE[key].url.includes("https://data.mo.ee/")) {
+        IMAGE_BASE[key].url = "https://data.mo.ee/" + IMAGE_BASE[key].url;
+    } else {
+        console.log(IMAGE_BASE[key].url)
+    }
+
     IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
 }
 
@@ -705,19 +710,20 @@ $.getJSON('https://rpg.mo.ee/version.js', function (data) {
     d3Helper = new D3Helper();
     d3Helper.drawGridAndGroundMask();
 
-    function myLoop () {          
-        setTimeout(function () {    
-            if(typeof on_map_json[0] != "undefined"){
+    function myLoop() {
+        setTimeout(function () {
+            if (typeof on_map_json[0] != "undefined") {
                 map.render(0, true);
                 console.log("Render");
-                return; 
-            } 
-            myLoop ();
+                return;
+            }
+            myLoop();
         }, 30)
-     }
-     
-     myLoop();         
+    }
 
+    myLoop();
+
+    //Retrieve JSONS from map
     map.mapNames.forEach((value, index) => {
         var mapFile: any = document.createElement('script');
         mapFile.setAttribute("async", "");
@@ -729,21 +735,21 @@ $.getJSON('https://rpg.mo.ee/version.js', function (data) {
 
     });
     console.log("Window on load finished")
- 
+
 });
 // var scale = 1
 
-function ScrollZoom(container,max_scale,factor){
+function ScrollZoom(container, max_scale, factor) {
     var target = container.children().first()
-    var size = {w:target.width(),h:target.height()}
-    var pos = {x:0,y:0}
-    var zoom_target = {x:0,y:0}
-    var zoom_point = {x:0,y:0}
+    var size = { w: target.width(), h: target.height() }
+    var pos = { x: 0, y: 0 }
+    var zoom_target = { x: 0, y: 0 }
+    var zoom_point = { x: 0, y: 0 }
     var scale = 1
-    target.css('transform-origin','0 0')
-    target.on("mousewheel DOMMouseScroll",scrolled)
+    target.css('transform-origin', '0 0')
+    target.on("mousewheel DOMMouseScroll", scrolled)
 
-    function scrolled(e){
+    function scrolled(e) {
         var offset = container.offset()
         zoom_point.x = e.pageX - offset.left
         zoom_point.y = e.pageY - offset.top
@@ -752,18 +758,18 @@ function ScrollZoom(container,max_scale,factor){
         e.preventDefault();
         var delta = e.delta || e.originalEvent.wheelDelta;
         if (delta === undefined) {
-          //we are on firefox
-          delta = e.originalEvent.detail;
+            //we are on firefox
+            delta = e.originalEvent.detail;
         }
-        delta = Math.max(-1,Math.min(1,delta)) // cap the delta to [-1,1] for cross browser consistency
+        delta = Math.max(-1, Math.min(1, delta)) // cap the delta to [-1,1] for cross browser consistency
 
         // determine the point on where the slide is zoomed in
-         zoom_target.x = (zoom_point.x - pos.x)/scale
-         zoom_target.y = (zoom_point.y - pos.y)/scale
+        zoom_target.x = (zoom_point.x - pos.x) / scale
+        zoom_target.y = (zoom_point.y - pos.y) / scale
 
         // apply zoom
-        scale += delta*factor * scale
-        scale = Math.max(1,Math.min(max_scale,scale))
+        scale += delta * factor * scale
+        scale = Math.max(1, Math.min(max_scale, scale))
 
         // calculate x and y based on zoom
         pos.x = -zoom_target.x * scale + zoom_point.x
@@ -774,28 +780,28 @@ function ScrollZoom(container,max_scale,factor){
         // $maps.scrollLeft();
 
         // Make sure the slide stays in its container area when zooming out
-        if(pos.x>0)
+        if (pos.x > 0)
             pos.x = 0
-        if(pos.x+size.w*scale<size.w)
-            pos.x = -size.w*(scale-1)
-        if(pos.y>0)
+        if (pos.x + size.w * scale < size.w)
+            pos.x = -size.w * (scale - 1)
+        if (pos.y > 0)
             pos.y = 0
-         if(pos.y+size.h*scale<size.h)
-            pos.y = -size.h*(scale-1)
+        if (pos.y + size.h * scale < size.h)
+            pos.y = -size.h * (scale - 1)
         // if(scale < 1)
-            // pos.x = 0;
+        // pos.x = 0;
         update()
     }
 
-    function update(){
+    function update() {
         // var $maps = $("#Maps");
 
-        target.css('transform','translate('+(pos.x)+'px,'+(pos.y)+'px) scale('+scale+','+scale+')')
+        target.css('transform', 'translate(' + (pos.x) + 'px,' + (pos.y) + 'px) scale(' + scale + ',' + scale + ')')
     }
 
 }
 
-new ScrollZoom($('#mapsContainer'),4,0.1)
+new ScrollZoom($('#mapsContainer'), 4, 0.1)
 
 
 console.log("Window on load finished")

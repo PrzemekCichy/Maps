@@ -4,6 +4,7 @@ var on_map_json = {};
 var map, d3Helper;
 // window.onload = () => {
 // }
+console.log("test");
 var version, cache;
 var D3Helper = /** @class */ (function () {
     function D3Helper() {
@@ -78,7 +79,7 @@ var RpgMap = /** @class */ (function () {
     function RpgMap() {
         this.clickOldY = 0;
         this.clickOldX = 0;
-        this.mapNames = ["Dorpat","Dungeon I","Narwa","Whiland","Reval","Rakblood","Blood River","Hell","Clouds","Heaven","Cesis","Walco","Tutorial Island","Pernau","Fellin","Dragon's Lair","No Man's Land","Ancient Dungeon","Lost Woods","Minigames","Broceliande Forest","Devil's Triangle","Cathedral","Illusion Guild","Every Man's Land","Moche I","Wittensten","Dungeon II","Dungeon III","Dungeon IV","Moche II","Void I","Nature Tower","Ice Tower","Fire Tower","Witches I","Witches II","Star Of Knowledge","Core Of Knowledge","No Man's Dungeon","Tavern","Lost Relic"];
+        this.mapNames = ["Dorpat", "Dungeon I", "Narwa", "Whiland", "Reval", "Rakblood", "Blood River", "Hell", "Clouds", "Heaven", "Cesis", "Walco", "Tutorial Island", "Pernau", "Fellin", "Dragon's Lair", "No Man's Land", "Ancient Dungeon", "Lost Woods", "Minigames", "Broceliande Forest", "Devil's Triangle", "Cathedral", "Illusion Guild", "Every Man's Land", "Moche I", "Wittensten", "Dungeon II", "Dungeon III", "Dungeon IV", "Moche II", "Void I", "Nature Tower", "Ice Tower", "Fire Tower", "Witches I", "Witches II", "Star Of Knowledge", "Core Of Knowledge", "No Man's Dungeon", "Tavern", "Lost Relic"];
         //Use <HTMLCanvasElement> or var groundTilesCanvas : any = document.getElementById("groundTilesCanvas");
         //Render Map tiles
         this.groundTilesCanvas = document.getElementById("groundTilesCanvas");
@@ -145,7 +146,7 @@ var RpgMap = /** @class */ (function () {
                 fillEnabled: false,
                 fillColour: "#2D5593",
                 fillColourBoxName: "Select fill colour",
-                fillSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 1, step: 0.1 } },
+                fillSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 1, step: 0.1 } }
             }, {
                 title: "Ground Overlay",
                 groupId: "groundOverlay",
@@ -159,7 +160,7 @@ var RpgMap = /** @class */ (function () {
                 fillEnabled: true,
                 fillColour: "#ffffff",
                 fillColourBoxName: "Select fill colour",
-                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } }
             }, {
                 title: "NPC Tiles Highlight",
                 groupId: "npcTilesHighlight",
@@ -173,7 +174,7 @@ var RpgMap = /** @class */ (function () {
                 fillEnabled: true,
                 fillColour: "#00B8DE",
                 fillColourBoxName: "Select fill colour",
-                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } }
             }, {
                 title: "Clickable Tiles Highlight",
                 groupId: "clickableTilesHighlight",
@@ -187,7 +188,7 @@ var RpgMap = /** @class */ (function () {
                 fillEnabled: true,
                 fillColour: "#FFCD00",
                 fillColourBoxName: "Select fill colour",
-                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } }
             }, {
                 title: "Monster Tiles Highlight",
                 groupId: "monsterTilesHighlight",
@@ -201,7 +202,7 @@ var RpgMap = /** @class */ (function () {
                 fillEnabled: true,
                 fillColour: "#AB2328",
                 fillColourBoxName: "Select fill colour",
-                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } }
             }, {
                 title: "Tree Tiles Highlight",
                 groupId: "treeTilesHighlight",
@@ -215,8 +216,23 @@ var RpgMap = /** @class */ (function () {
                 fillEnabled: true,
                 fillColour: "#00482B",
                 fillColourBoxName: "Select fill colour",
-                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } },
+                fillSlider: { label: 'Fill Opacity', value: 0.2, range: { min: 0, max: 1, step: 0.1 } }
             },
+            // {
+            //     title: "Monster Group Highlight",
+            //     groupId: "mobsGroups",
+            //     drawEnabled: true,
+            //     drawEnabledValue: true,
+            //     drawEnabledDescription: "Draw highlight tile under chopable trees",
+            //     strokeEnabled: true,
+            //     strokeColour: "#313335",
+            //     strokeColourBoxName: "Select stroke colour",
+            //     strokeSlider: { label: 'Stroke Width', value: 1, range: { min: 0, max: 3, step: 1 } },
+            //     fillEnabled: true,
+            //     fillColour: "#5F4B8B",
+            //     fillColourBoxName: "Select fill colour",
+            //     fillSlider: { label: 'Fill Opacity', value: 1, range: { min: 0, max: 1, step: 0.1 } },
+            // }
         ];
         // // bootstrap the demo
         // new Vue({
@@ -605,6 +621,12 @@ for (var key in IMAGE_BASE) {
         continue;
     }
     IMAGE_BASE[key].img = new Image();
+    if (!IMAGE_BASE[key].url.includes("https://data.mo.ee/")) {
+        IMAGE_BASE[key].url = "https://data.mo.ee/" + IMAGE_BASE[key].url;
+    }
+    else {
+        console.log(IMAGE_BASE[key].url);
+    }
     IMAGE_BASE[key].img.src = IMAGE_BASE[key].url;
 }
 $.getJSON('https://rpg.mo.ee/version.js', function (data) {
@@ -624,6 +646,7 @@ $.getJSON('https://rpg.mo.ee/version.js', function (data) {
         }, 30);
     }
     myLoop();
+    //Retrieve JSONS from map
     map.mapNames.forEach(function (value, index) {
         var mapFile = document.createElement('script');
         mapFile.setAttribute("async", "");
@@ -687,4 +710,3 @@ function ScrollZoom(container, max_scale, factor) {
 }
 new ScrollZoom($('#mapsContainer'), 4, 0.1);
 console.log("Window on load finished");
-//# sourceMappingURL=map.js.map
