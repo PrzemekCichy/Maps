@@ -125,3 +125,23 @@
     .modal_options_entry {
         margin-bottom: 20px;
     }
+
+    #zoom-controls {
+        position: fixed;
+        top: 5px;
+        left: 5px;
+        z-index: 10000;
+        background: rgba(255,255,255,0.9);
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+
+    #zoom-slider {
+        width: 150px;
+        vertical-align: middle;
+    }
+
+    #zoom-value {
+        margin-left: 10px;
+        font-weight: bold;
+    }
