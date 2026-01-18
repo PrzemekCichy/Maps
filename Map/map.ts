@@ -46,6 +46,7 @@ class D3Helper {
       .append("g")
       .attr("class", "unsafeAreaHighlight"),
     mobsGroups: this.textSvg.append("g").attr("class", "mobsGroups"),
+    pathHighlight: this.svg.append("g").attr("class", "pathHighlight"),
   };
 
   public drawGridAndGroundMask() {
@@ -159,10 +160,15 @@ class RpgMap {
   constructor() {
     this.InitializeMousePanning();
     this.RenderNavigation();
+    this.InitializePathfinding();
   }
 
   private clickOldY = 0;
   clickOldX = 0;
+  private pathStart: { x: number; y: number } = null;
+  private pathEnd: { x: number; y: number } = null;
+  private blocked = {};
+  private aggroZones = {};
 
   //Map container Scrolling
   private InitializeMousePanning() {
@@ -200,6 +206,145 @@ class RpgMap {
       this.clickOldY = $maps.scrollTop();
       this.clickOldX = $maps.scrollLeft();
     };
+  }
+
+  private InitializePathfinding() {
+    var $maps = $("#Maps");
+    var shiftPressed = false;
+    $(document).on("keydown", (e) => {
+      if (e.key === "Shift" && !shiftPressed) {
+        shiftPressed = true;
+        $maps.css("cursor", "crosshair");
+      }
+    });
+    $(document).on("keyup", (e) => {
+      if (e.key === "Shift") {
+        shiftPressed = false;
+        $maps.css("cursor", "auto");
+      }
+    });
+    $("#mapsContainer").on("click", (e) => {
+      if (!shiftPressed) return;
+      var rect = e.currentTarget.getBoundingClientRect();
+      var clickX =
+        (e.clientX - rect.left - scrollZoom.getPos().x) / scrollZoom.getScale();
+      var clickY =
+        (e.clientY - rect.top - scrollZoom.getPos().y) / scrollZoom.getScale();
+      var gridPos = this.screenToGrid(clickX, clickY);
+
+      if (!this.pathStart) {
+        this.pathStart = gridPos;
+        this.drawPathMarker(gridPos, "#00FF00");
+      } else if (!this.pathEnd) {
+        this.pathEnd = gridPos;
+        this.drawPathMarker(gridPos, "#FF0000");
+        this.findAndDrawPath();
+      } else {
+        d3Helper.svgGroups.pathHighlight.selectAll("*").remove();
+        this.pathStart = gridPos;
+        this.pathEnd = null;
+        this.drawPathMarker(gridPos, "#00FF00");
+      }
+    });
+  }
+
+  private screenToGrid(screenX: number, screenY: number) {
+    var i = ((screenX - 28) / 27 - (screenY - 1400) / 14) / 2;
+    var j = ((screenY - 1400) / 14 + (screenX - 28) / 27) / 2;
+    return { x: Math.round(j), y: Math.round(i) };
+  }
+
+  private gridToScreen(gridX: number, gridY: number) {
+    var offsetX = 28 + 27 * gridX + 27 * gridY;
+    var offsetY = 1386 - 14 * gridY + 14 * gridX;
+    return { x: offsetX, y: offsetY };
+  }
+
+  private drawPathMarker(pos: { x: number; y: number }, color: string) {
+    var s = this.gridToScreen(pos.x, pos.y);
+    d3Helper.drawPolygon(
+      d3Helper.svgGroups.pathHighlight,
+      [
+        { x: s.x - 27, y: s.y + 14 },
+        { x: s.x, y: s.y + 28 },
+        { x: s.x + 27, y: s.y + 14 },
+        { x: s.x, y: s.y },
+      ],
+      "#000",
+      "2",
+      color,
+      "0.7",
+    );
+  }
+
+  private findAndDrawPath() {
+    var path = this.aStar(this.pathStart, this.pathEnd);
+    if (path) {
+      for (var i = 0; i < path.length; i++) {
+        this.drawPathMarker(path[i], "#0088FF");
+      }
+      this.drawPathMarker(this.pathStart, "#00FF00");
+      this.drawPathMarker(this.pathEnd, "#FF0000");
+    }
+  }
+
+  private aStar(
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+  ) {
+    var open = [
+      {
+        ...start,
+        g: 0,
+        f: Math.abs(start.x - end.x) + Math.abs(start.y - end.y),
+      },
+    ];
+    var from = {};
+    var g = {};
+    var k = (p) => p.x + "," + p.y;
+    g[k(start)] = 0;
+
+    while (open.length) {
+      open.sort((a, b) => a.f - b.f);
+      var cur = open.shift();
+      if (cur.x === end.x && cur.y === end.y) {
+        var path = [cur];
+        while (from[k(cur)]) {
+          cur = from[k(cur)];
+          path.unshift(cur);
+        }
+        return path;
+      }
+
+      [
+        { x: cur.x + 1, y: cur.y },
+        { x: cur.x - 1, y: cur.y },
+        { x: cur.x, y: cur.y + 1 },
+        { x: cur.x, y: cur.y - 1 },
+      ].forEach((n) => {
+        if (
+          n.x < 0 ||
+          n.x >= 100 ||
+          n.y < 0 ||
+          n.y >= 100 ||
+          this.blocked[k(n)]
+        )
+          return;
+        var moveCost = 1 + (this.aggroZones[k(n)] ? 3 : 0);
+        var tg = g[k(cur)] + moveCost;
+        var nk = k(n);
+        if (g[nk] === undefined || tg < g[nk]) {
+          from[nk] = cur;
+          g[nk] = tg;
+          open.push({
+            ...n,
+            g: tg,
+            f: tg + Math.abs(n.x - end.x) + Math.abs(n.y - end.y),
+          });
+        }
+      });
+    }
+    return null;
   }
 
   public mapNames = [
@@ -563,6 +708,8 @@ class RpgMap {
       d3Helper.textSvg.selectAll("g").selectAll("*").remove();
       d3Helper.drawGridAndGroundMask();
       $("#groupSidebar")[0].innerHTML = "";
+      this.blocked = {};
+      this.aggroZones = {};
     }
 
     d3Helper
@@ -600,6 +747,14 @@ class RpgMap {
         offsetY = 0 + 14 * (99 - maps[tile].j);
         offsetY += 14 * maps[tile].i;
         var tempImg = ground_base[maps[tile].b_i].img;
+        if (ground_base[maps[tile].b_i].blocking) {
+          console.log(
+            "ground_base[maps[tile].b_i]",
+            ground_base[maps[tile].b_i],
+          );
+          this.blocked[maps[tile].i + "," + maps[tile].j] = true;
+        }
+
         this.ctxGround.drawImage(
           IMAGE_BASE[tempImg.sheet].img,
           tempImg.x * 54,
@@ -647,6 +802,7 @@ class RpgMap {
         on_tile = sorted_on_tiles[x][y];
         if (typeof on_tile == "undefined") continue;
         //console.log(x, y, on_tile, mapsTop[on_tile])
+        this.blocked[on_tile.i + "," + on_tile.j] = true;
 
         offsetX = 28 + 27 * on_tile.i;
         offsetX += 27 * on_tile.j;
@@ -658,6 +814,7 @@ class RpgMap {
           continue;
         }
         if (on_tile.b_t == "4") {
+          this.blocked[on_tile.i + "," + on_tile.j] = true;
           if (obj.type == "4") {
             npcs.push(obj);
             d3Helper.drawPolygon(
@@ -674,6 +831,8 @@ class RpgMap {
               "0.2",
             );
           } else if (obj.activities.indexOf("Attack") != "-1") {
+            this.blocked[on_tile.i + "," + on_tile.j] = false;
+
             d3Helper.drawPolygon(
               d3Helper.svgGroups.monsterTilesHighlight,
               [
@@ -688,6 +847,17 @@ class RpgMap {
               "0.3",
             );
             if (obj.params.aggressive) {
+              var aggroTiles = [
+                { i: on_tile.i - 1, j: on_tile.j },
+                { i: on_tile.i + 1, j: on_tile.j },
+                { i: on_tile.i, j: on_tile.j - 1 },
+                { i: on_tile.i, j: on_tile.j + 1 },
+              ];
+              aggroTiles.forEach((t) => {
+                if (t.i >= 0 && t.i < 100 && t.j >= 0 && t.j < 100) {
+                  this.aggroZones[t.i + "," + t.j] = true;
+                }
+              });
               var tiles = [
                 { x: offsetX - 27, y: offsetY - 14 },
                 { x: offsetX + 27, y: offsetY - 14 },
@@ -740,6 +910,7 @@ class RpgMap {
           continue;
         }
         if (obj.activities.indexOf("Chop") != "-1") {
+          this.blocked[on_tile.i + "," + on_tile.j] = true;
           d3Helper.drawPolygon(
             d3Helper.svgGroups.treeTilesHighlight,
             [
@@ -754,6 +925,8 @@ class RpgMap {
             "0.3",
           );
         } else if (obj.activities.indexOf("Use") != "-1") {
+          this.blocked[on_tile.i + "," + on_tile.j] = true;
+
           d3Helper.drawPolygon(
             d3Helper.svgGroups.clickableTilesHighlight,
             [
@@ -771,6 +944,8 @@ class RpgMap {
         var tempImg = IMAGE_BASE[obj.img.sheet];
 
         if (typeof obj.img.file == "string") {
+          this.blocked[on_tile.i + "," + on_tile.j] = true;
+
           tempImg = IMAGE_BASE[obj.img.sheet].sprite.img[obj.img.file];
           var random_x_offset =
             typeof obj.img.x == "object"
@@ -1393,6 +1568,10 @@ function ScrollZoom(container, max_scale, factor) {
 
   this.getScale = function () {
     return scale;
+  };
+
+  this.getPos = function () {
+    return pos;
   };
 
   this.updateSlider = function () {

@@ -1,3 +1,14 @@
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var item_base, players, pets;
 var map_json = {};
 var on_map_json = {};
@@ -28,6 +39,7 @@ var D3Helper = /** @class */ (function () {
                 .append("g")
                 .attr("class", "unsafeAreaHighlight"),
             mobsGroups: this.textSvg.append("g").attr("class", "mobsGroups"),
+            pathHighlight: this.svg.append("g").attr("class", "pathHighlight"),
         };
         this.drawPolygon = function (svg, points, strokeColour, strokeWidth, fillColour, fillOpacity) {
             svg
@@ -95,6 +107,10 @@ var RpgMap = /** @class */ (function () {
     function RpgMap() {
         this.clickOldY = 0;
         this.clickOldX = 0;
+        this.pathStart = null;
+        this.pathEnd = null;
+        this.blocked = {};
+        this.aggroZones = {};
         this.mapNames = [
             "Dorpat",
             "Dungeon I",
@@ -147,6 +163,7 @@ var RpgMap = /** @class */ (function () {
         this.ctxTop = this.topTilesCanvas.getContext("2d");
         this.InitializeMousePanning();
         this.RenderNavigation();
+        this.InitializePathfinding();
     }
     //Map container Scrolling
     RpgMap.prototype.InitializeMousePanning = function () {
@@ -180,6 +197,119 @@ var RpgMap = /** @class */ (function () {
             _this.clickOldY = $maps.scrollTop();
             _this.clickOldX = $maps.scrollLeft();
         };
+    };
+    RpgMap.prototype.InitializePathfinding = function () {
+        var _this = this;
+        var $maps = $("#Maps");
+        var shiftPressed = false;
+        $(document).on("keydown", function (e) {
+            if (e.key === "Shift" && !shiftPressed) {
+                shiftPressed = true;
+                $maps.css("cursor", "crosshair");
+            }
+        });
+        $(document).on("keyup", function (e) {
+            if (e.key === "Shift") {
+                shiftPressed = false;
+                $maps.css("cursor", "auto");
+            }
+        });
+        $("#mapsContainer").on("click", function (e) {
+            if (!shiftPressed)
+                return;
+            var rect = e.currentTarget.getBoundingClientRect();
+            var clickX = (e.clientX - rect.left - scrollZoom.getPos().x) / scrollZoom.getScale();
+            var clickY = (e.clientY - rect.top - scrollZoom.getPos().y) / scrollZoom.getScale();
+            var gridPos = _this.screenToGrid(clickX, clickY);
+            if (!_this.pathStart) {
+                _this.pathStart = gridPos;
+                _this.drawPathMarker(gridPos, "#00FF00");
+            }
+            else if (!_this.pathEnd) {
+                _this.pathEnd = gridPos;
+                _this.drawPathMarker(gridPos, "#FF0000");
+                _this.findAndDrawPath();
+            }
+            else {
+                d3Helper.svgGroups.pathHighlight.selectAll("*").remove();
+                _this.pathStart = gridPos;
+                _this.pathEnd = null;
+                _this.drawPathMarker(gridPos, "#00FF00");
+            }
+        });
+    };
+    RpgMap.prototype.screenToGrid = function (screenX, screenY) {
+        var i = ((screenX - 28) / 27 - (screenY - 1400) / 14) / 2;
+        var j = ((screenY - 1400) / 14 + (screenX - 28) / 27) / 2;
+        return { x: Math.round(j), y: Math.round(i) };
+    };
+    RpgMap.prototype.gridToScreen = function (gridX, gridY) {
+        var offsetX = 28 + 27 * gridX + 27 * gridY;
+        var offsetY = 1386 - 14 * gridY + 14 * gridX;
+        return { x: offsetX, y: offsetY };
+    };
+    RpgMap.prototype.drawPathMarker = function (pos, color) {
+        var s = this.gridToScreen(pos.x, pos.y);
+        d3Helper.drawPolygon(d3Helper.svgGroups.pathHighlight, [
+            { x: s.x - 27, y: s.y + 14 },
+            { x: s.x, y: s.y + 28 },
+            { x: s.x + 27, y: s.y + 14 },
+            { x: s.x, y: s.y },
+        ], "#000", "2", color, "0.7");
+    };
+    RpgMap.prototype.findAndDrawPath = function () {
+        var path = this.aStar(this.pathStart, this.pathEnd);
+        if (path) {
+            for (var i = 0; i < path.length; i++) {
+                this.drawPathMarker(path[i], "#0088FF");
+            }
+            this.drawPathMarker(this.pathStart, "#00FF00");
+            this.drawPathMarker(this.pathEnd, "#FF0000");
+        }
+    };
+    RpgMap.prototype.aStar = function (start, end) {
+        var _this = this;
+        var open = [
+            __assign(__assign({}, start), { g: 0, f: Math.abs(start.x - end.x) + Math.abs(start.y - end.y) }),
+        ];
+        var from = {};
+        var g = {};
+        var k = function (p) { return p.x + "," + p.y; };
+        g[k(start)] = 0;
+        while (open.length) {
+            open.sort(function (a, b) { return a.f - b.f; });
+            var cur = open.shift();
+            if (cur.x === end.x && cur.y === end.y) {
+                var path = [cur];
+                while (from[k(cur)]) {
+                    cur = from[k(cur)];
+                    path.unshift(cur);
+                }
+                return path;
+            }
+            [
+                { x: cur.x + 1, y: cur.y },
+                { x: cur.x - 1, y: cur.y },
+                { x: cur.x, y: cur.y + 1 },
+                { x: cur.x, y: cur.y - 1 },
+            ].forEach(function (n) {
+                if (n.x < 0 ||
+                    n.x >= 100 ||
+                    n.y < 0 ||
+                    n.y >= 100 ||
+                    _this.blocked[k(n)])
+                    return;
+                var moveCost = 1 + (_this.aggroZones[k(n)] ? 3 : 0);
+                var tg = g[k(cur)] + moveCost;
+                var nk = k(n);
+                if (g[nk] === undefined || tg < g[nk]) {
+                    from[nk] = cur;
+                    g[nk] = tg;
+                    open.push(__assign(__assign({}, n), { g: tg, f: tg + Math.abs(n.x - end.x) + Math.abs(n.y - end.y) }));
+                }
+            });
+        }
+        return null;
     };
     RpgMap.prototype.RenderNavigation = function () {
         new Vue({
@@ -462,11 +592,14 @@ var RpgMap = /** @class */ (function () {
         // });
     };
     RpgMap.prototype.render = function (map_id, preserveSvg) {
+        var _this = this;
         if (!preserveSvg) {
             d3Helper.svg.selectAll("g").selectAll("*").remove();
             d3Helper.textSvg.selectAll("g").selectAll("*").remove();
             d3Helper.drawGridAndGroundMask();
             $("#groupSidebar")[0].innerHTML = "";
+            this.blocked = {};
+            this.aggroZones = {};
         }
         d3Helper
             .drawText(d3Helper.textSvg, "Use right click to drag the map...", 30, 30)
@@ -489,6 +622,10 @@ var RpgMap = /** @class */ (function () {
                 offsetY = 0 + 14 * (99 - maps[tile].j);
                 offsetY += 14 * maps[tile].i;
                 var tempImg = ground_base[maps[tile].b_i].img;
+                if (ground_base[maps[tile].b_i].blocking) {
+                    console.log("ground_base[maps[tile].b_i]", ground_base[maps[tile].b_i]);
+                    this.blocked[maps[tile].i + "," + maps[tile].j] = true;
+                }
                 this.ctxGround.drawImage(IMAGE_BASE[tempImg.sheet].img, tempImg.x * 54, tempImg.y * 34, 54, 34, offsetX, offsetY, 54, 34);
                 if (typeof ground_base[maps[tile].b_i].top == "object") {
                     tempImg = ground_base[maps[tile].b_i].top;
@@ -515,6 +652,7 @@ var RpgMap = /** @class */ (function () {
                 if (typeof on_tile == "undefined")
                     continue;
                 //console.log(x, y, on_tile, mapsTop[on_tile])
+                this.blocked[on_tile.i + "," + on_tile.j] = true;
                 offsetX = 28 + 27 * on_tile.i;
                 offsetX += 27 * on_tile.j;
                 offsetY = 1350 + 36 - 14 * on_tile.j;
@@ -525,6 +663,7 @@ var RpgMap = /** @class */ (function () {
                     continue;
                 }
                 if (on_tile.b_t == "4") {
+                    this.blocked[on_tile.i + "," + on_tile.j] = true;
                     if (obj.type == "4") {
                         npcs.push(obj);
                         d3Helper.drawPolygon(d3Helper.svgGroups.npcTilesHighlight, [
@@ -535,6 +674,7 @@ var RpgMap = /** @class */ (function () {
                         ], "#313335", "1", "#2D5593", "0.2");
                     }
                     else if (obj.activities.indexOf("Attack") != "-1") {
+                        this.blocked[on_tile.i + "," + on_tile.j] = false;
                         d3Helper.drawPolygon(d3Helper.svgGroups.monsterTilesHighlight, [
                             { x: offsetX - 27, y: offsetY + 14 },
                             { x: offsetX + 0, y: offsetY + 28 },
@@ -542,6 +682,17 @@ var RpgMap = /** @class */ (function () {
                             { x: offsetX + 0, y: offsetY + 0 },
                         ], "#313335", "1", "#AB2328", "0.3");
                         if (obj.params.aggressive) {
+                            var aggroTiles = [
+                                { i: on_tile.i - 1, j: on_tile.j },
+                                { i: on_tile.i + 1, j: on_tile.j },
+                                { i: on_tile.i, j: on_tile.j - 1 },
+                                { i: on_tile.i, j: on_tile.j + 1 },
+                            ];
+                            aggroTiles.forEach(function (t) {
+                                if (t.i >= 0 && t.i < 100 && t.j >= 0 && t.j < 100) {
+                                    _this.aggroZones[t.i + "," + t.j] = true;
+                                }
+                            });
                             var tiles = [
                                 { x: offsetX - 27, y: offsetY - 14 },
                                 { x: offsetX + 27, y: offsetY - 14 },
@@ -566,6 +717,7 @@ var RpgMap = /** @class */ (function () {
                     continue;
                 }
                 if (obj.activities.indexOf("Chop") != "-1") {
+                    this.blocked[on_tile.i + "," + on_tile.j] = true;
                     d3Helper.drawPolygon(d3Helper.svgGroups.treeTilesHighlight, [
                         { x: offsetX - 27, y: offsetY + 14 },
                         { x: offsetX + 0, y: offsetY + 28 },
@@ -574,6 +726,7 @@ var RpgMap = /** @class */ (function () {
                     ], "#313335", "1", "#00482B", "0.3");
                 }
                 else if (obj.activities.indexOf("Use") != "-1") {
+                    this.blocked[on_tile.i + "," + on_tile.j] = true;
                     d3Helper.drawPolygon(d3Helper.svgGroups.clickableTilesHighlight, [
                         { x: offsetX - 27, y: offsetY + 14 },
                         { x: offsetX + 0, y: offsetY + 28 },
@@ -583,6 +736,7 @@ var RpgMap = /** @class */ (function () {
                 }
                 var tempImg = IMAGE_BASE[obj.img.sheet];
                 if (typeof obj.img.file == "string") {
+                    this.blocked[on_tile.i + "," + on_tile.j] = true;
                     tempImg = IMAGE_BASE[obj.img.sheet].sprite.img[obj.img.file];
                     var random_x_offset = typeof obj.img.x == "object"
                         ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)]
@@ -998,6 +1152,9 @@ function ScrollZoom(container, max_scale, factor) {
     };
     this.getScale = function () {
         return scale;
+    };
+    this.getPos = function () {
+        return pos;
     };
     this.updateSlider = function () {
         var level = Math.log2(scale);

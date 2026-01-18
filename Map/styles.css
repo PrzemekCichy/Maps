@@ -12,6 +12,15 @@
 
     svg {
         position: absolute;
+        pointer-events: none;
+    }
+
+    svg * {
+        pointer-events: auto;
+    }
+
+    svg .pathHighlight {
+        pointer-events: none;
     }
 
     #show-modal {
@@ -63,7 +72,7 @@
     }
 
     svg {
-        cursor: crosshair;
+        pointer-events: none;
     }
 
     .modal-wrapper {
@@ -144,4 +153,15 @@
     #zoom-value {
         margin-left: 10px;
         font-weight: bold;
+    }
+
+    #pathfinding-info {
+        position: fixed;
+        bottom: 5px;
+        left: 5px;
+        z-index: 10000;
+        background: rgba(255,255,255,0.9);
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
     }
