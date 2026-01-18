@@ -154,6 +154,11 @@ var RpgMap = /** @class */ (function () {
             "No Man's Dungeon",
             "Tavern",
             "Lost Relic",
+            "Purgatory",
+            "Atlantis",
+            "River Of Wailing",
+            "Acheron",
+            "River Styx",
         ];
         //Use <HTMLCanvasElement> or var groundTilesCanvas : any = document.getElementById("groundTilesCanvas");
         //Render Map tiles
@@ -658,6 +663,10 @@ var RpgMap = /** @class */ (function () {
                 offsetY = 1350 + 36 - 14 * on_tile.j;
                 offsetY += 14 * on_tile.i;
                 var obj = BASE_TYPE[on_tile.b_t][on_tile.b_i];
+                //Temporarily do this, TODO fix
+                if (Array.isArray(obj.img)) {
+                    obj.img.sheet = obj.img[0].sheet;
+                }
                 if (typeof obj == "undefined") {
                     console.log(on_tile.b_t, on_tile.b_i, "Undefined");
                     continue;
@@ -758,8 +767,9 @@ var RpgMap = /** @class */ (function () {
             }
         }
         (function () {
+            var _a;
             var canvasHolder = (document.getElementById("groupSidebar"));
-            computed_mob_locations[map_id].forEach(function (center, index) {
+            (_a = computed_mob_locations[map_id]) === null || _a === void 0 ? void 0 : _a.forEach(function (center, index) {
                 offsetX = 28 + 27 * center.x;
                 offsetX += 27 * center.y;
                 offsetY = 1350 + 36 - 14 * center.y;
