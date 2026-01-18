@@ -255,7 +255,7 @@ var RpgMap = /** @class */ (function () {
                 strokeColour: "#313335",
                 strokeSlider: {
                     label: "Stroke Width",
-                    value: 1,
+                    value: 2,
                     range: { min: 0, max: 3, step: 1 },
                 },
                 fillEnabled: true,
@@ -263,7 +263,7 @@ var RpgMap = /** @class */ (function () {
                 fillColourBoxName: "Select fill colour",
                 fillSlider: {
                     label: "Fill Opacity",
-                    value: 0.2,
+                    value: 1.0,
                     range: { min: 0, max: 1, step: 0.1 },
                 },
             },
@@ -286,7 +286,7 @@ var RpgMap = /** @class */ (function () {
                 fillColourBoxName: "Select fill colour",
                 fillSlider: {
                     label: "Fill Opacity",
-                    value: 0.2,
+                    value: 0.9,
                     range: { min: 0, max: 1, step: 0.1 },
                 },
             },
@@ -309,7 +309,7 @@ var RpgMap = /** @class */ (function () {
                 fillColourBoxName: "Select fill colour",
                 fillSlider: {
                     label: "Fill Opacity",
-                    value: 0.2,
+                    value: 0.8,
                     range: { min: 0, max: 1, step: 0.1 },
                 },
             },
@@ -332,7 +332,7 @@ var RpgMap = /** @class */ (function () {
                 fillColourBoxName: "Select fill colour",
                 fillSlider: {
                     label: "Fill Opacity",
-                    value: 0.2,
+                    value: 0.5,
                     range: { min: 0, max: 1, step: 0.1 },
                 },
             },
@@ -355,7 +355,7 @@ var RpgMap = /** @class */ (function () {
                 fillColourBoxName: "Select fill colour",
                 fillSlider: {
                     label: "Fill Opacity",
-                    value: 0.2,
+                    value: 0.5,
                     range: { min: 0, max: 1, step: 0.1 },
                 },
             },
@@ -541,17 +541,17 @@ var RpgMap = /** @class */ (function () {
                             { x: offsetX + 27, y: offsetY + 14 },
                             { x: offsetX + 0, y: offsetY + 0 },
                         ], "#313335", "1", "#AB2328", "0.3");
-                        if (obj.params?.aggressive) {
+                        if (obj.params.aggressive) {
                             var tiles = [
                                 { x: offsetX - 27, y: offsetY - 14 },
                                 { x: offsetX + 27, y: offsetY - 14 },
                                 { x: offsetX + 27, y: offsetY + 14 },
-                                { x: offsetX - 27, y: offsetY + 14 }
+                                { x: offsetX - 27, y: offsetY + 14 },
                             ];
-                            tiles.forEach(function(tile) {
+                            tiles.forEach(function (tile) {
                                 d3Helper.drawPolygon(d3Helper.svgGroups.unsafeAreaHighlight, [
                                     { x: tile.x - 27, y: tile.y + 14 },
-                                    { x: tile.x, y: tile.y + 28 },
+                                    { x: tile.x, y: tile.y + 27 },
                                     { x: tile.x + 27, y: tile.y + 14 },
                                     { x: tile.x, y: tile.y },
                                 ], "#313335", "1", "#FF0000", "0.2");
@@ -584,6 +584,9 @@ var RpgMap = /** @class */ (function () {
                 var tempImg = IMAGE_BASE[obj.img.sheet];
                 if (typeof obj.img.file == "string") {
                     tempImg = IMAGE_BASE[obj.img.sheet].sprite.img[obj.img.file];
+                    var random_x_offset = typeof obj.img.x == "object"
+                        ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)]
+                        : obj.img.x;
                     this.ctxTop.drawImage(tempImg.img, random_x_offset * tempImg.tile_width, obj.img.y * tempImg.tile_height, tempImg.tile_width, tempImg.tile_height, offsetX - tempImg.tile_half_width_floor, offsetY - tempImg.tile_half_height_floor, tempImg.tile_width, tempImg.tile_height);
                     continue;
                 }
@@ -1000,9 +1003,7 @@ function ScrollZoom(container, max_scale, factor) {
         var level = Math.log2(scale);
         $("#zoom-slider").val(level);
         var displayScale = scale >= 1 ? Math.round(scale) : 1 / Math.round(1 / scale);
-        $("#zoom-value").text(scale >= 1
-            ? Math.round(scale) + "x"
-            : "1/" + Math.round(1 / scale) + "x");
+        $("#zoom-value").text(scale >= 1 ? Math.round(scale) + "x" : "1/" + Math.round(1 / scale) + "x");
     };
 }
 var scrollZoom = new ScrollZoom($("#mapsContainer"), 8, 0.1);

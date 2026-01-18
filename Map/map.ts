@@ -42,7 +42,9 @@ class D3Helper {
     treeTilesHighlight: this.svg
       .append("g")
       .attr("class", "treeTilesHighlight"),
-    unsafeAreaHighlight: this.svg.append("g").attr("class", "unsafeAreaHighlight"),
+    unsafeAreaHighlight: this.svg
+      .append("g")
+      .attr("class", "unsafeAreaHighlight"),
     mobsGroups: this.textSvg.append("g").attr("class", "mobsGroups"),
   };
 
@@ -322,7 +324,7 @@ class RpgMap {
         strokeColour: "#313335",
         strokeSlider: {
           label: "Stroke Width",
-          value: 1,
+          value: 2,
           range: { min: 0, max: 3, step: 1 },
         },
         fillEnabled: true,
@@ -330,7 +332,7 @@ class RpgMap {
         fillColourBoxName: "Select fill colour",
         fillSlider: {
           label: "Fill Opacity",
-          value: 0.2,
+          value: 1.0,
           range: { min: 0, max: 1, step: 0.1 },
         },
       },
@@ -353,7 +355,7 @@ class RpgMap {
         fillColourBoxName: "Select fill colour",
         fillSlider: {
           label: "Fill Opacity",
-          value: 0.2,
+          value: 0.9,
           range: { min: 0, max: 1, step: 0.1 },
         },
       },
@@ -376,7 +378,7 @@ class RpgMap {
         fillColourBoxName: "Select fill colour",
         fillSlider: {
           label: "Fill Opacity",
-          value: 0.2,
+          value: 0.8,
           range: { min: 0, max: 1, step: 0.1 },
         },
       },
@@ -399,8 +401,9 @@ class RpgMap {
         fillColourBoxName: "Select fill colour",
         fillSlider: {
           label: "Fill Opacity",
-          value: 0.2,
+          value: 0.5,
           range: { min: 0, max: 1, step: 0.1 },
+        },
       },
       {
         title: "Unsafe Area Highlight",
@@ -423,7 +426,6 @@ class RpgMap {
           label: "Fill Opacity",
           value: 0.5,
           range: { min: 0, max: 1, step: 0.1 },
-        },
         },
       },
       // {
@@ -687,17 +689,17 @@ class RpgMap {
             );
             if (obj.params.aggressive) {
               var tiles = [
-                   { x: offsetX - 27, y: offsetY - 14 },
-                   { x: offsetX + 27, y: offsetY - 14 },
-                   { x: offsetX + 27, y: offsetY + 14 },
-                   { x: offsetX - 27, y: offsetY + 14 }
+                { x: offsetX - 27, y: offsetY - 14 },
+                { x: offsetX + 27, y: offsetY - 14 },
+                { x: offsetX + 27, y: offsetY + 14 },
+                { x: offsetX - 27, y: offsetY + 14 },
               ];
-              tiles.forEach(function(tile) {
+              tiles.forEach(function (tile) {
                 d3Helper.drawPolygon(
                   d3Helper.svgGroups.unsafeAreaHighlight,
                   [
                     { x: tile.x - 27, y: tile.y + 14 },
-                    { x: tile.x, y: tile.y + 54 },
+                    { x: tile.x, y: tile.y + 27 },
                     { x: tile.x + 27, y: tile.y + 14 },
                     { x: tile.x, y: tile.y },
                   ],
@@ -708,7 +710,6 @@ class RpgMap {
                 );
               });
             }
-          }
           }
           if (typeof obj.img.hash != "undefined") {
             this.ctxTop.drawImage(
@@ -771,6 +772,10 @@ class RpgMap {
 
         if (typeof obj.img.file == "string") {
           tempImg = IMAGE_BASE[obj.img.sheet].sprite.img[obj.img.file];
+          var random_x_offset =
+            typeof obj.img.x == "object"
+              ? obj.img.x[Math.floor(Math.random() * obj.img.x.length)]
+              : obj.img.x;
 
           this.ctxTop.drawImage(
             tempImg.img,
@@ -1327,82 +1332,79 @@ function ScrollZoom(container, max_scale, factor) {
         scale +
         ")",
     );
-
   }
   this.zoomIn = function () {
-      var offset = container.offset();
-      zoom_point.x = container.width() / 2;
-      zoom_point.y = container.height() / 2;
-      zoom_target.x = (zoom_point.x - pos.x) / scale;
-      zoom_target.y = (zoom_point.y - pos.y) / scale;
-      scale += factor * scale;
-      scale = Math.max(0.5, Math.min(max_scale, scale));
-      pos.x = -zoom_target.x * scale + zoom_point.x;
-      pos.y = -zoom_target.y * scale + zoom_point.y;
+    var offset = container.offset();
+    zoom_point.x = container.width() / 2;
+    zoom_point.y = container.height() / 2;
+    zoom_target.x = (zoom_point.x - pos.x) / scale;
+    zoom_target.y = (zoom_point.y - pos.y) / scale;
+    scale += factor * scale;
+    scale = Math.max(0.5, Math.min(max_scale, scale));
+    pos.x = -zoom_target.x * scale + zoom_point.x;
+    pos.y = -zoom_target.y * scale + zoom_point.y;
+    if (pos.x > 0) pos.x = 0;
+    if (pos.x + size.w * scale < size.w) pos.x = -size.w * (scale - 1);
+    if (pos.y > 0) pos.y = 0;
+    if (pos.y + size.h * scale < size.h) pos.y = -size.h * (scale - 1);
+    update();
+  };
+
+  this.zoomOut = function () {
+    var offset = container.offset();
+    zoom_point.x = container.width() / 2;
+    zoom_point.y = container.height() / 2;
+    zoom_target.x = (zoom_point.x - pos.x) / scale;
+    zoom_target.y = (zoom_point.y - pos.y) / scale;
+    scale -= factor * scale;
+    scale = Math.max(0.5, Math.min(max_scale, scale));
+    pos.x = -zoom_target.x * scale + zoom_point.x;
+    pos.y = -zoom_target.y * scale + zoom_point.y;
+    if (pos.x > 0) pos.x = 0;
+    if (pos.x + size.w * scale < size.w) pos.x = -size.w * (scale - 1);
+    if (pos.y > 0) pos.y = 0;
+    if (pos.y + size.h * scale < size.h) pos.y = -size.h * (scale - 1);
+    update();
+  };
+
+  this.reset = function () {
+    scale = 1;
+    pos = { x: 0, y: 0 };
+    update();
+  };
+
+  this.setZoom = function (level) {
+    var newScale = level >= 0 ? Math.pow(2, level) : 1 / Math.pow(2, -level);
+    zoom_point.x = container.width() / 2;
+    zoom_point.y = container.height() / 2;
+    zoom_target.x = (zoom_point.x - pos.x) / scale;
+    zoom_target.y = (zoom_point.y - pos.y) / scale;
+    scale = newScale;
+    pos.x = -zoom_target.x * scale + zoom_point.x;
+    pos.y = -zoom_target.y * scale + zoom_point.y;
+    if (scale >= 1) {
       if (pos.x > 0) pos.x = 0;
       if (pos.x + size.w * scale < size.w) pos.x = -size.w * (scale - 1);
       if (pos.y > 0) pos.y = 0;
       if (pos.y + size.h * scale < size.h) pos.y = -size.h * (scale - 1);
-      update();
-    };
+    }
+    update();
+  };
 
-    this.zoomOut = function () {
-      var offset = container.offset();
-      zoom_point.x = container.width() / 2;
-      zoom_point.y = container.height() / 2;
-      zoom_target.x = (zoom_point.x - pos.x) / scale;
-      zoom_target.y = (zoom_point.y - pos.y) / scale;
-      scale -= factor * scale;
-      scale = Math.max(0.5, Math.min(max_scale, scale));
-      pos.x = -zoom_target.x * scale + zoom_point.x;
-      pos.y = -zoom_target.y * scale + zoom_point.y;
-      if (pos.x > 0) pos.x = 0;
-      if (pos.x + size.w * scale < size.w) pos.x = -size.w * (scale - 1);
-      if (pos.y > 0) pos.y = 0;
-      if (pos.y + size.h * scale < size.h) pos.y = -size.h * (scale - 1);
-      update();
-    };
+  this.getScale = function () {
+    return scale;
+  };
 
-    this.reset = function () {
-      scale = 1;
-      pos = { x: 0, y: 0 };
-      update();
-    };
-
-    this.setZoom = function (level) {
-      var newScale = level >= 0 ? Math.pow(2, level) : 1 / Math.pow(2, -level);
-      zoom_point.x = container.width() / 2;
-      zoom_point.y = container.height() / 2;
-      zoom_target.x = (centerX - pos.x) / scale;
-      zoom_target.y = (centerY - pos.y) / scale;
-      scale = newScale;
-      pos.x = -zoom_target.x * scale + zoom_point.x;
-      pos.y = -zoom_target.y * scale + zoom_point.y;
-      if (scale >= 1) {
-        if (pos.x > 0) pos.x = 0;
-        if (pos.x + size.w * scale < size.w) pos.x = -size.w * (scale - 1);
-        if (pos.y > 0) pos.y = 0;
-        if (pos.y + size.h * scale < size.h) pos.y = -size.h * (scale - 1);
-      }
-      update();
-    };
-
-    this.getScale = function () {
-      return scale;
-    };
-
-    this.updateSlider = function () {
-      var level = Math.log2(scale);
-      $("#zoom-slider").val(level);
-      var displayScale =
-        scale >= 1 ? Math.round(scale) : 1 / Math.round(1 / scale);
-      $("#zoom-value").text(
-        scale >= 1
-          ? Math.round(scale) + "x"
-          : "1/" + Math.round(1 / scale) + "x",
-      );
-    };
-  }
+  this.updateSlider = function () {
+    var level = Math.log2(scale);
+    $("#zoom-slider").val(level);
+    var displayScale =
+      scale >= 1 ? Math.round(scale) : 1 / Math.round(1 / scale);
+    $("#zoom-value").text(
+      scale >= 1 ? Math.round(scale) + "x" : "1/" + Math.round(1 / scale) + "x",
+    );
+  };
+}
 
 var scrollZoom = new ScrollZoom($("#mapsContainer"), 8, 0.1);
 
