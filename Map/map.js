@@ -24,6 +24,9 @@ var D3Helper = /** @class */ (function () {
             treeTilesHighlight: this.svg
                 .append("g")
                 .attr("class", "treeTilesHighlight"),
+            unsafeAreaHighlight: this.svg
+                .append("g")
+                .attr("class", "unsafeAreaHighlight"),
             mobsGroups: this.textSvg.append("g").attr("class", "mobsGroups"),
         };
         this.drawPolygon = function (svg, points, strokeColour, strokeWidth, fillColour, fillOpacity) {
@@ -333,6 +336,29 @@ var RpgMap = /** @class */ (function () {
                     range: { min: 0, max: 1, step: 0.1 },
                 },
             },
+            {
+                title: "Unsafe Area Highlight",
+                groupId: "unsafeAreaHighlight",
+                drawEnabled: true,
+                drawEnabledValue: true,
+                drawEnabledDescription: "Shade unsafe areas around aggressive mobs",
+                strokeEnabled: true,
+                strokeColour: "#313335",
+                strokeColourBoxName: "Select stroke colour",
+                strokeSlider: {
+                    label: "Stroke Width",
+                    value: 1,
+                    range: { min: 0, max: 3, step: 1 },
+                },
+                fillEnabled: true,
+                fillColour: "#FF0000",
+                fillColourBoxName: "Select fill colour",
+                fillSlider: {
+                    label: "Fill Opacity",
+                    value: 0.2,
+                    range: { min: 0, max: 1, step: 0.1 },
+                },
+            },
             // {
             //     title: "Monster Group Highlight",
             //     groupId: "mobsGroups",
@@ -515,6 +541,22 @@ var RpgMap = /** @class */ (function () {
                             { x: offsetX + 27, y: offsetY + 14 },
                             { x: offsetX + 0, y: offsetY + 0 },
                         ], "#313335", "1", "#AB2328", "0.3");
+                        if (obj.params?.aggressive) {
+                            var tiles = [
+                                { x: offsetX - 27, y: offsetY - 14 },
+                                { x: offsetX + 27, y: offsetY - 14 },
+                                { x: offsetX + 27, y: offsetY + 14 },
+                                { x: offsetX - 27, y: offsetY + 14 }
+                            ];
+                            tiles.forEach(function(tile) {
+                                d3Helper.drawPolygon(d3Helper.svgGroups.unsafeAreaHighlight, [
+                                    { x: tile.x - 27, y: tile.y + 14 },
+                                    { x: tile.x, y: tile.y + 28 },
+                                    { x: tile.x + 27, y: tile.y + 14 },
+                                    { x: tile.x, y: tile.y },
+                                ], "#313335", "1", "#FF0000", "0.2");
+                            });
+                        }
                     }
                     if (typeof obj.img.hash != "undefined") {
                         this.ctxTop.drawImage(drawBody(obj.img.hash), 0, 0, 64, 54, offsetX - 27, offsetY - 23, 64, 54);
